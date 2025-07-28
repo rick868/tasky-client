@@ -1,4 +1,4 @@
-import React, { useContext } from 'react';
+import  { useContext } from 'react';
 import type { ReactNode } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import Registration from './pages/registration';
@@ -11,10 +11,8 @@ import Tasks from './pages/tasks';
 import NewTask from './pages/newTask';
 import Trash from './pages/trash';
 import UpdateTask from './pages/updateTask';
-//import CompletedTasks from './pages/completedTasks';
 import { AuthContext } from './context/AuthContext';
-
-// Dashboard is not imported, so removing its route
+import Header from './components/landingarea/header';
 
 const ProtectedRoute = ({ children }: { children: ReactNode }) => {
   const { user } = useContext(AuthContext);
@@ -27,11 +25,11 @@ const ProtectedRoute = ({ children }: { children: ReactNode }) => {
 const App = () => {
   const location = useLocation();
 
-  // Show Header on all pages except /home and /tasks
   const showHeader = location.pathname !== '/home' && location.pathname !== '/tasks';
 
   return (
-    
+    <>
+      {showHeader && <Header />}
       <Routes>
         <Route path="/signin" element={<SignIn />} />
         <Route path="/signup" element={<SignUp />} />
@@ -69,14 +67,14 @@ const App = () => {
             </ProtectedRoute>
           }
         />
- {/*      <Route
+        {/* <Route
           path="/completedTasks"
           element={
             <ProtectedRoute>
               <CompletedTasks />
             </ProtectedRoute>
           }
-        />*/}
+        /> */}
         <Route
           path="/trash"
           element={
@@ -95,6 +93,7 @@ const App = () => {
         />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
+    </>
   );
 };
 
