@@ -10,19 +10,37 @@ const SignIn = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  const handleSignInSubmit = async (data: { emailOrUserName: string; password: string }) => {
+  const handleSignInSubmit = async (data: { identifier: string; password: string }) => {
     setLoading(true);
     setError('');
     try {
-      const response = await axios.post('http://localhost:4000/api/auth/login', {
-        emailOrUsername: data.emailOrUserName,
+      interface User {
+        id: string;
+        username: string;
+        email: string;
+      }
+
+      interface LoginResponse {
+        user: User;
+        token: string;
+      }
+
+      const response = await axios.post<LoginResponse>('http://localhost:4000/api/auth/login', {
+        emailOrUsername: data.identifier,
         password: data.password,
       });
 
-      const userWithToken = { ...response.data.user, token: response.data.token };
+      const userWithToken = {
+        id: response.data.user.id,
+        firstName: '', // Assign appropriate value if available
+        lastName: '',  // Assign appropriate value if available
+        userName: response.data.user.username,
+        emailAddress: response.data.user.email,
+        token: response.data.token,
+      };
       login(userWithToken);
       navigate('/home');
-    } catch (err) {
+    } catch {
       setError('Invalid credentials');
     } finally {
       setLoading(false);
