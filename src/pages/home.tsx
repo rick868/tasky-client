@@ -544,7 +544,7 @@ const Home = () => {
             sx={{ flexGrow: 1, cursor: 'pointer' }}
             onClick={() => navigate('/')}
           >
-            ZenFlow
+            Tasky
           </Typography>
 
           
