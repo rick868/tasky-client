@@ -1,5 +1,6 @@
 import React, { useContext, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
 import SignInForm from '../components/auth/signin';
 import { AuthContext } from '../context/AuthContext';
 
@@ -13,21 +14,12 @@ const SignIn = () => {
     setLoading(true);
     setError('');
     try {
-      const response = await fetch('http://localhost:4000/api/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          emailOrUsername: data.emailOrUserName,
-          password: data.password,
-        }),
+      const response = await axios.post('http://localhost:4000/api/auth/login', {
+        emailOrUsername: data.emailOrUserName,
+        password: data.password,
       });
 
-      if (!response.ok) {
-        throw new Error('Invalid credentials');
-      }
-
-      const result = await response.json();
-      const userWithToken = { ...result.user, token: result.token };
+      const userWithToken = { ...response.data.user, token: response.data.token };
       login(userWithToken);
       navigate('/home');
     } catch (err) {
