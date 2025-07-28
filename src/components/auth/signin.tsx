@@ -10,9 +10,10 @@ type Props = {
   onSubmit: (data: LoginData) => void;
   loading?: boolean;
   onSignUpClick: (e: React.MouseEvent) => void;
+  error?: string;
 };
 
-const SignInForm = ({ onSubmit, loading, onSignUpClick }: Props) => {
+const SignInForm = ({ onSubmit, loading, onSignUpClick, error }: Props) => {
   const { register, handleSubmit, formState: { errors } } = useForm<LoginData>();
 
   return (
@@ -64,6 +65,11 @@ const SignInForm = ({ onSubmit, loading, onSignUpClick }: Props) => {
           {loading ? 'Logging In...' : 'Log In'}
         </Button>
       </Box>
+      {error && (
+        <Typography color="error" variant="body2" textAlign="center" sx={{ mt: 2 }}>
+          {error}
+        </Typography>
+      )}
       <Divider sx={{ my: 2 }} />
       <Typography variant="body2" textAlign="center">
         Forgot your password?{' '}
