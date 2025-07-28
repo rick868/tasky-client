@@ -1,14 +1,12 @@
-import React, { useContext, useState } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
 import SignUpForm from '../components/auth/signup';
-import { AuthContext } from '../context/AuthContext';
 
 const SignUp = () => {
-  const { login } = useContext(AuthContext);
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
-
-  const handleSignUpSubmit = (data: {
+  const handleSignUpSubmit = async (data: {
     firstName: string;
     lastName: string;
     userName: string;
@@ -16,25 +14,25 @@ const SignUp = () => {
     password: string;
   }) => {
     setLoading(true);
-    // Simulate signup API call
-    setTimeout(() => {
-      // For demo, create a user object from signup data
-      const user = {
+    try {
+      await axios.post('https://tasky-server-8tsc.onrender.com/api/auth/register', {
         firstName: data.firstName,
         lastName: data.lastName,
-        userName: data.userName,
-        emailAddress: data.emailAddress,
-        token: 'dummy-token',
-      };
-      login(user);
+        username: data.userName,
+        email: data.emailAddress,
+        password: data.password,
+      });
       setLoading(false);
-      navigate('/home');
-    }, 1000);
+      navigate('/signin');
+    } catch (error) {
+      setLoading(false);
+      throw error;
+    }
   };
 
   const handleSignInClick = (e: React.MouseEvent) => {
     e.preventDefault();
-    navigate('/home');
+    navigate('/signin');
   };
 
   return <SignUpForm onSubmit={handleSignUpSubmit} loading={loading} onSignInClick={handleSignInClick} />;

@@ -65,8 +65,7 @@ const Home = () => {
   const [sidebarOpen, setSidebarOpen] = useState(!isMobile);
   const [selectedView, setSelectedView] = useState('My Tasks');
   const [tasks, setTasks] = useState(() => {
-    const storedTasks = localStorage.getItem('tasks');
-    return storedTasks ? JSON.parse(storedTasks) : tasksSample;
+  
   });
   const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
   const [quickAddOpen, setQuickAddOpen] = useState(false);
