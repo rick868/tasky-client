@@ -12,7 +12,6 @@ import {
   ListItem,
   ListItemText,
   Chip,
-  Divider,
   Drawer,
   ListItemIcon,
   Menu,
@@ -43,7 +42,20 @@ import {
 
 const drawerWidth = 240;
 
-const tasksSample = [
+interface Task {
+  id: string;
+  title: string;
+  dueDate?: string | null;
+  priority: 'High' | 'Medium' | 'Low';
+  project?: string | null;
+  labels: string[];
+  status: string;
+  isCompleted: boolean;
+  isDeleted: boolean;
+  description?: string;
+}
+
+const tasksSample: Task[] = [
   {
     id: '1',
     title: 'Design Homepage',
@@ -88,18 +100,18 @@ const tasksSample = [
     isCompleted: false,
     isDeleted: false,
   },
-  {
-    id: '5',
-    title: 'Submit Expense Report',
-    dueDate: '2025-07-10',
-    priority: 'High',
-    project: 'Admin',
-    labels: ['Finance'],
-    status: 'Not Started',
-    isCompleted: false,
-    isDeleted: false,
-  },
-];
+    {
+      id: '5',
+      title: 'Submit Expense Report',
+      dueDate: '2025-07-10',
+      priority: 'High',
+      project: 'Admin',
+      labels: ['Finance'],
+      status: 'Not Started',
+      isCompleted: false,
+      isDeleted: false,
+    }
+  ];
 
 const Home = () => {
   const navigate = useNavigate();
@@ -113,22 +125,22 @@ const Home = () => {
     const storedTasks = localStorage.getItem('tasks');
     return storedTasks ? JSON.parse(storedTasks) : tasksSample;
   });
-  const [anchorEl, setAnchorEl] = useState(null);
+  const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
   const [quickAddOpen, setQuickAddOpen] = useState(false);
   const [newTaskName, setNewTaskName] = useState('');
   const [newTaskDueDate, setNewTaskDueDate] = useState('');
   const [newTaskProject, setNewTaskProject] = useState('');
   const [newTaskTags, setNewTaskTags] = useState('');
   const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
-  const [taskToDelete, setTaskToDelete] = useState(null);
+  const [taskToDelete, setTaskToDelete] = useState<Task | null>(null);
 
-  // --- NEW STATE FOR FILTERS ---
-  const [filterOpen, setFilterOpen] = useState(false); // Controls filter modal visibility
-  const [filterName, setFilterName] = useState(''); // For text-based filtering
-  const [filterDate, setFilterDate] = useState(''); // For date-based filtering
-  const [filterPriority, setFilterPriority] = useState(''); // For priority filtering
-  const [filterProject, setFilterProject] = useState(''); // For project filtering
-  const [filterLabel, setFilterLabel] = useState(''); // For label filtering
+  
+  const [filterOpen, setFilterOpen] = useState(false);
+  const [filterName, setFilterName] = useState(''); 
+  const [filterDate, setFilterDate] = useState(''); 
+  const [filterPriority, setFilterPriority] = useState(''); 
+  const [filterProject, setFilterProject] = useState('');
+  const [filterLabel, setFilterLabel] = useState(''); 
 
   useEffect(() => {
     setSidebarOpen(!isMobile);
@@ -145,7 +157,7 @@ const Home = () => {
     }
   };
 
-  const handleProfileMenuOpen = (event) => {
+  const handleProfileMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorEl(event.currentTarget);
   };
 
@@ -186,7 +198,7 @@ const Home = () => {
     handleQuickAddClose();
   };
 
-  const handleDeleteClick = (task) => {
+  const handleDeleteClick = (task: Task) => {
     setTaskToDelete(task);
     setConfirmDeleteOpen(true);
   };
@@ -195,9 +207,9 @@ const Home = () => {
     if (taskToDelete) {
       let updatedTasks;
       if (selectedView === 'Trash') {
-        updatedTasks = tasks.filter(t => t.id !== taskToDelete.id);
+        updatedTasks = tasks.filter((t: Task) => t.id !== taskToDelete.id);
       } else {
-        updatedTasks = tasks.map(t => {
+        updatedTasks = tasks.map((t: Task) => {
           if (t.id === taskToDelete.id) {
             return { ...t, isDeleted: true };
           }
@@ -212,8 +224,8 @@ const Home = () => {
     }
   };
 
-  const handleRestoreTask = (taskId) => {
-    const updatedTasks = tasks.map(t => {
+  const handleRestoreTask = (taskId : string) => {
+    const updatedTasks = tasks.map((t: Task) => {
       if (t.id === taskId) {
         return { ...t, isDeleted: false };
       }
@@ -228,8 +240,8 @@ const Home = () => {
     setConfirmDeleteOpen(false);
   };
 
-  const handleToggleComplete = (taskId) => {
-    const updatedTasks = tasks.map(task => {
+  const handleToggleComplete = (taskId: string) => {
+    const updatedTasks = tasks.map((task: Task) => {
       if (task.id === taskId) {
         return { ...task, isCompleted: !task.isCompleted };
       }
@@ -262,21 +274,19 @@ const Home = () => {
     { label: 'Trash', icon: <DeleteIcon />, description: 'Deleted tasks', key: 'Trash' },
   ];
 
- 
-
 
   const renderTaskList = () => {
-    let filteredTasks = tasks.filter(task => !task.isDeleted); 
+    let filteredTasks = tasks.filter((task: Task) => !task.isDeleted); 
 
-    // Apply global filters first
+    
     if (filterName) {
-      filteredTasks = filteredTasks.filter(task =>
+      filteredTasks = filteredTasks.filter((task: Task) => 
         task.title.toLowerCase().includes(filterName.toLowerCase())
       );
     }
 
     if (filterDate) {
-      filteredTasks = filteredTasks.filter(task => {
+      filteredTasks = filteredTasks.filter((task:Task) => {
         if (!task.dueDate) return false;
         const dueDate = new Date(task.dueDate);
         return dueDate.toDateString() === new Date(filterDate).toDateString();
@@ -284,31 +294,30 @@ const Home = () => {
     }
 
     if (filterPriority) {
-      filteredTasks = filteredTasks.filter(task => task.priority === filterPriority);
+      filteredTasks = filteredTasks.filter((task: Task) => task.priority === filterPriority);
     }
 
     if (filterProject) {
-      filteredTasks = filteredTasks.filter(task => task.project === filterProject);
+      filteredTasks = filteredTasks.filter((task: Task) => task.project === filterProject);
     }
 
     if (filterLabel) {
-      filteredTasks = filteredTasks.filter(task => task.labels.includes(filterLabel));
+      filteredTasks = filteredTasks.filter((task: Task ) => task.labels.includes(filterLabel));
     }
 
 
-    // Apply view-specific filters
     if (selectedView === 'My Tasks') {
-      filteredTasks = filteredTasks.filter(task => !task.isCompleted);
+      filteredTasks = filteredTasks.filter((task: Task) => !task.isCompleted);
     } else if (selectedView === 'Completed') {
-      filteredTasks = tasks.filter(task => task.isCompleted && !task.isDeleted);
+      filteredTasks = tasks.filter((task: Task) => task.isCompleted && !task.isDeleted);
     } else if (selectedView === 'Inbox') {
-      filteredTasks = tasks.filter(task => !task.isDeleted);
+      filteredTasks = tasks.filter((task: Task)=> !task.isDeleted);
       if (filteredTasks.length === 0) {
         filteredTasks = tasksSample.filter(task => !task.isDeleted);
       }
     } else if (selectedView === 'Today') {
       const today = new Date();
-      filteredTasks = filteredTasks.filter(task => {
+      filteredTasks = filteredTasks.filter((task: Task) => {
         if (!task.dueDate) return false;
         const dueDate = new Date(task.dueDate);
         return dueDate.toDateString() === today.toDateString();
@@ -317,13 +326,13 @@ const Home = () => {
       const now = new Date();
       const nextWeek = new Date();
       nextWeek.setDate(now.getDate() + 7);
-      filteredTasks = filteredTasks.filter(task => {
+      filteredTasks = filteredTasks.filter((task: Task) => {
         if (!task.dueDate) return false;
         const dueDate = new Date(task.dueDate);
         return dueDate > now && dueDate <= nextWeek && !task.isCompleted;
       });
     } else if (selectedView === 'Trash') {
-      filteredTasks = tasks.filter(task => task.isDeleted);
+      filteredTasks = tasks.filter((task: Task) => task.isDeleted);
     }
 
     if (filteredTasks.length === 0) {
@@ -361,8 +370,8 @@ const Home = () => {
 
     return (
       <List sx={{ width: '100%', maxWidth: 800, margin: '0 auto' }}>
-        {filteredTasks.map(task => {
-          let priorityColor;
+        {filteredTasks.map((task: Task) => {
+          let priorityColor: 'error' | 'warning' | 'info';
           if (task.priority === 'High') {
             priorityColor = 'error';
           } else if (task.priority === 'Medium') {
@@ -500,13 +509,16 @@ const Home = () => {
             </ListItemButton>
           </ListItem>
         ))}
+      </List>
+    </Box>
+  );
 
-  const allProjects = [...new Set(tasks.map(task = </List> task.project).filter(Boolean))];
-  const allLabels = [...new Set(tasks.flatMap(task = task.labels).filter(Boolean))];
+  const allProjects = [...new Set(tasks.map((task: Task) => task.project).filter(Boolean))];
+  const allLabels = [...new Set(tasks.flatMap((task: Task) => task.labels).filter(Boolean))];
 
   return (
     <Box sx={{ display: 'flex', height: '100vh', bgcolor: theme.palette.background.default }}>
-      {/* Top Header Bar */}
+     
       <AppBar
         position="fixed"
         sx={{
@@ -535,7 +547,7 @@ const Home = () => {
             ZenFlow
           </Typography>
 
-          {/* Quick Add Button in AppBar */}
+          
           <Button
             variant="contained"
             color="secondary"
@@ -550,7 +562,7 @@ const Home = () => {
             Add Task
           </Button>
 
-          {/* Icon for Quick Add on smaller screens */}
+         
           <IconButton
             color="inherit"
             aria-label="add task"
@@ -601,7 +613,7 @@ const Home = () => {
         </Toolbar>
       </AppBar>
 
-      {/* Mobile Drawer (Temporary) */}
+      
       <Drawer
         variant="temporary"
         open={mobileOpen}
@@ -617,7 +629,7 @@ const Home = () => {
         {drawerContent}
       </Drawer>
 
-      {/* Desktop Drawer (Permanent) */}
+      
       <Drawer
         variant="permanent"
         sx={{
@@ -629,7 +641,7 @@ const Home = () => {
         {drawerContent}
       </Drawer>
 
-      {/* Main Content Area */}
+     
       <Box
         component="main"
         sx={{
@@ -672,7 +684,7 @@ const Home = () => {
         {renderTaskList()}
       </Box>
 
-      {/* Quick Add Task Modal */}
+      
       <Modal open={quickAddOpen} onClose={handleQuickAddClose}>
         <Paper
           sx={{
@@ -682,7 +694,9 @@ const Home = () => {
             transform: 'translate(-50%, -50%)',
             width: { xs: '90%', sm: 450 },
             p: 4,
-            borderRadius: theme.shape.borderRadius * 2,
+            borderRadius: typeof theme.shape.borderRadius === 'number'
+              ? theme.shape.borderRadius * 2
+              : `calc(${theme.shape.borderRadius} * 2)`,
             boxShadow: theme.shadows[8],
             outline: 'none',
           }}
@@ -751,7 +765,7 @@ const Home = () => {
         </Paper>
       </Modal>
 
-      {/* Delete Confirmation Modal */}
+      
       <Modal open={confirmDeleteOpen} onClose={handleCancelDelete}>
         <Paper
           sx={{
@@ -761,7 +775,9 @@ const Home = () => {
             transform: 'translate(-50%, -50%)',
             width: { xs: '90%', sm: 350 },
             p: 4,
-            borderRadius: theme.shape.borderRadius * 2,
+            borderRadius: typeof theme.shape.borderRadius === 'number'
+              ? theme.shape.borderRadius * 2
+              : `calc(${theme.shape.borderRadius} * 2)`,
             boxShadow: theme.shadows[8],
             outline: 'none',
           }}
@@ -784,7 +800,7 @@ const Home = () => {
         </Paper>
       </Modal>
 
-      {/* Filter Modal */}
+     
       <Modal open={filterOpen} onClose={() => setFilterOpen(false)}>
         <Paper
           sx={{
@@ -794,7 +810,9 @@ const Home = () => {
             transform: 'translate(-50%, -50%)',
             width: { xs: '90%', sm: 450 },
             p: 4,
-            borderRadius: theme.shape.borderRadius * 2,
+            borderRadius: typeof theme.shape.borderRadius === 'number'
+              ? theme.shape.borderRadius * 2
+              : `calc(${theme.shape.borderRadius} * 2)`,
             boxShadow: theme.shadows[8],
             outline: 'none',
           }}
@@ -842,7 +860,7 @@ const Home = () => {
             >
               <MenuItem value=""><em>Any</em></MenuItem>
               {allProjects.map(project => (
-                <MenuItem key={project} value={project}>{project}</MenuItem>
+                <MenuItem key={String(project)} value={String(project)}>{String(project)}</MenuItem>
               ))}
             </Select>
           </FormControl>
@@ -855,7 +873,7 @@ const Home = () => {
             >
               <MenuItem value=""><em>Any</em></MenuItem>
               {allLabels.map(label => (
-                <MenuItem key={label} value={label}>{label}</MenuItem>
+                <MenuItem key={String(label)} value={String(label)}>{String(label)}</MenuItem>
               ))}
             </Select>
           </FormControl>

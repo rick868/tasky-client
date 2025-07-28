@@ -32,8 +32,8 @@ const SignIn = () => {
 
       const userWithToken = {
         id: response.data.user.id,
-        firstName: '', // Assign appropriate value if available
-        lastName: '',  // Assign appropriate value if available
+        firstName: '', 
+        lastName: '',  
         userName: response.data.user.username,
         emailAddress: response.data.user.email,
         token: response.data.token,
