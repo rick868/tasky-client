@@ -1,164 +1,279 @@
-import React, { useState, useContext } from 'react';
-import { Container, Typography, Box, Button, TextField } from '@mui/material';
+import React, { useContext, useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import {
+  Box,
+  Typography,
+  TextField,
+  Button,
+  Paper,
+  Container,
+  Avatar,
+  Alert,
+  Divider,
+  Grid,
+} from '@mui/material';
 import { AuthContext } from '../context/AuthContext';
+import { userApi, authApi } from '../services/api';
 
 const Profile = () => {
-  const { user, logout, updateUserDetails, updatePassword, updateProfilePicture } = useContext(AuthContext);
-
-  const [editUserDetails, setEditUserDetails] = useState({
+  const navigate = useNavigate();
+  const { user, updateUserDetails, logout } = useContext(AuthContext);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
+  const [profileData, setProfileData] = useState({
     firstName: user?.firstName || '',
     lastName: user?.lastName || '',
-    userName: user?.userName || '',
-    emailAddress: user?.emailAddress || '',
+    username: user?.userName || '',
+    email: user?.emailAddress || '',
   });
-
-  const [passwords, setPasswords] = useState({
+  const [passwordData, setPasswordData] = useState({
     currentPassword: '',
     newPassword: '',
+    confirmPassword: '',
   });
 
-  const [passwordError, setPasswordError] = useState('');
-
-  const [profilePicture, setProfilePicture] = useState<File | null>(null);
-  const [profilePicturePreview, setProfilePicturePreview] = useState<string | null>(null);
-
-  const handleUserDetailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setEditUserDetails({
-      ...editUserDetails,
+  const handleProfileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setProfileData({
+      ...profileData,
       [e.target.name]: e.target.value,
     });
-  };
-
-  const handleUserDetailsSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    updateUserDetails(editUserDetails);
-    if (profilePicture) {
-      updateProfilePicture(profilePicture);
-    }
   };
 
   const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setPasswords({
-      ...passwords,
+    setPasswordData({
+      ...passwordData,
       [e.target.name]: e.target.value,
     });
   };
 
-  const handlePasswordSubmit = (e: React.FormEvent) => {
+  const handleProfileUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
-    const success = updatePassword(passwords.currentPassword, passwords.newPassword);
-    if (!success) {
-      setPasswordError('Current password is incorrect');
-      return;
+    setLoading(true);
+    setError('');
+    setSuccess('');
+
+    try {
+      await userApi.updateProfile(profileData);
+      updateUserDetails(profileData);
+      setSuccess('Profile updated successfully!');
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to update profile';
+      setError(errorMessage);
+    } finally {
+      setLoading(false);
     }
-    setPasswordError('');
-    setPasswords({ currentPassword: '', newPassword: '' });
   };
 
-  const handleProfilePictureChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      const file = e.target.files[0];
-      setProfilePicture(file);
-      setProfilePicturePreview(URL.createObjectURL(file));
+  const handlePasswordUpdate = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setError('');
+    setSuccess('');
+
+    if (passwordData.newPassword !== passwordData.confirmPassword) {
+      setError('New passwords do not match');
+      setLoading(false);
+      return;
     }
+
+    if (passwordData.newPassword.length < 6) {
+      setError('New password must be at least 6 characters long');
+      setLoading(false);
+      return;
+    }
+
+    try {
+      await authApi.updatePassword(passwordData.currentPassword, passwordData.newPassword);
+      setSuccess('Password updated successfully!');
+      setPasswordData({
+        currentPassword: '',
+        newPassword: '',
+        confirmPassword: '',
+      });
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to update password';
+      setError(errorMessage);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleLogout = () => {
+    logout();
+    navigate('/signin');
   };
 
   return (
-    <Container maxWidth="md" sx={{ mt: 4 }}>
-      <Typography variant="h4" gutterBottom>
-        Profile Page
-      </Typography>
+    <Container component="main" maxWidth="md">
+      <Box
+        sx={{
+          marginTop: 4,
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+        }}
+      >
+        <Paper
+          elevation={3}
+          sx={{
+            padding: 4,
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            width: '100%',
+          }}
+        >
+          <Avatar
+            sx={{
+              width: 80,
+              height: 80,
+              mb: 2,
+              bgcolor: 'primary.main',
+              fontSize: '2rem',
+            }}
+          >
+            {user?.userName?.charAt(0) || 'U'}
+          </Avatar>
+          
+          <Typography component="h1" variant="h4" gutterBottom>
+            Profile Settings
+          </Typography>
 
-      <Box sx={{ mb: 4 }}>
-        <Typography variant="h5" gutterBottom>
-          Profile Picture
-        </Typography>
-        {profilePicturePreview ? (
-          <Box component="img" src={profilePicturePreview} alt="Profile Preview" sx={{ width: 150, height: 150, borderRadius: '50%', mb: 2 }} />
-        ) : (
-          <Typography>No profile picture uploaded</Typography>
-        )}
-        <Button variant="contained" component="label">
-          Upload Profile Picture
-          <input type="file" hidden accept="image/*" onChange={handleProfilePictureChange} />
-        </Button>
-      </Box>
-
-      <Box sx={{ mb: 4 }}>
-        <Typography variant="h5" gutterBottom>
-          Update Personal Details
-        </Typography>
-        <Box component="form" onSubmit={handleUserDetailsSubmit} sx={{ display: 'flex', flexDirection: 'column', gap: 2, maxWidth: 400 }}>
-          <TextField
-            label="First Name"
-            name="firstName"
-            value={editUserDetails.firstName}
-            onChange={handleUserDetailChange}
-            required
-          />
-          <TextField
-            label="Last Name"
-            name="lastName"
-            value={editUserDetails.lastName}
-            onChange={handleUserDetailChange}
-            required
-          />
-          <TextField
-            label="Username"
-            name="userName"
-            value={editUserDetails.userName}
-            onChange={handleUserDetailChange}
-            required
-          />
-          <TextField
-            label="Email Address"
-            name="emailAddress"
-            value={editUserDetails.emailAddress}
-            onChange={handleUserDetailChange}
-            required
-            type="email"
-          />
-          <Button type="submit" variant="contained" color="primary">
-            Update Details
-          </Button>
-        </Box>
-      </Box>
-
-      <Box sx={{ mb: 4 }}>
-        <Typography variant="h5" gutterBottom>
-          Update Password
-        </Typography>
-        <Box component="form" onSubmit={handlePasswordSubmit} sx={{ display: 'flex', flexDirection: 'column', gap: 2, maxWidth: 400 }}>
-          <TextField
-            label="Current Password"
-            name="currentPassword"
-            type="password"
-            value={passwords.currentPassword}
-            onChange={handlePasswordChange}
-            required
-          />
-          <TextField
-            label="New Password"
-            name="newPassword"
-            type="password"
-            value={passwords.newPassword}
-            onChange={handlePasswordChange}
-            required
-          />
-          {passwordError && (
-            <Typography color="error" variant="body2">
-              {passwordError}
-            </Typography>
+          {error && (
+            <Alert severity="error" sx={{ width: '100%', mb: 2 }}>
+              {error}
+            </Alert>
           )}
-          <Button type="submit" variant="contained" color="primary">
-            Update Password
-          </Button>
-        </Box>
-      </Box>
 
-      <Button variant="contained" color="secondary" onClick={logout}>
-        Log Out
-      </Button>
+          {success && (
+            <Alert severity="success" sx={{ width: '100%', mb: 2 }}>
+              {success}
+            </Alert>
+          )}
+
+          <Grid container spacing={3} sx={{ width: '100%' }}>
+            {/* Profile Information */}
+            <Grid item xs={12} md={6}>
+              <Typography variant="h6" gutterBottom>
+                Profile Information
+              </Typography>
+              <Box component="form" onSubmit={handleProfileUpdate}>
+                <TextField
+                  margin="normal"
+                  fullWidth
+                  id="firstName"
+                  label="First Name"
+                  name="firstName"
+                  value={profileData.firstName}
+                  onChange={handleProfileChange}
+                />
+                <TextField
+                  margin="normal"
+                  fullWidth
+                  id="lastName"
+                  label="Last Name"
+                  name="lastName"
+                  value={profileData.lastName}
+                  onChange={handleProfileChange}
+                />
+                <TextField
+                  margin="normal"
+                  fullWidth
+                  id="username"
+                  label="Username"
+                  name="username"
+                  value={profileData.username}
+                  onChange={handleProfileChange}
+                />
+                <TextField
+                  margin="normal"
+                  fullWidth
+                  id="email"
+                  label="Email Address"
+                  name="email"
+                  type="email"
+                  value={profileData.email}
+                  onChange={handleProfileChange}
+                />
+                <Button
+                  type="submit"
+                  fullWidth
+                  variant="contained"
+                  sx={{ mt: 2 }}
+                  disabled={loading}
+                >
+                  {loading ? 'Updating...' : 'Update Profile'}
+                </Button>
+              </Box>
+            </Grid>
+
+            {/* Password Change */}
+            <Grid item xs={12} md={6}>
+              <Typography variant="h6" gutterBottom>
+                Change Password
+              </Typography>
+              <Box component="form" onSubmit={handlePasswordUpdate}>
+                <TextField
+                  margin="normal"
+                  fullWidth
+                  name="currentPassword"
+                  label="Current Password"
+                  type="password"
+                  value={passwordData.currentPassword}
+                  onChange={handlePasswordChange}
+                />
+                <TextField
+                  margin="normal"
+                  fullWidth
+                  name="newPassword"
+                  label="New Password"
+                  type="password"
+                  value={passwordData.newPassword}
+                  onChange={handlePasswordChange}
+                />
+                <TextField
+                  margin="normal"
+                  fullWidth
+                  name="confirmPassword"
+                  label="Confirm New Password"
+                  type="password"
+                  value={passwordData.confirmPassword}
+                  onChange={handlePasswordChange}
+                />
+                <Button
+                  type="submit"
+                  fullWidth
+                  variant="contained"
+                  sx={{ mt: 2 }}
+                  disabled={loading}
+                >
+                  {loading ? 'Updating...' : 'Change Password'}
+                </Button>
+              </Box>
+            </Grid>
+          </Grid>
+
+          <Divider sx={{ width: '100%', my: 3 }} />
+
+          <Box sx={{ width: '100%', textAlign: 'center' }}>
+            <Button
+              variant="outlined"
+              color="error"
+              onClick={handleLogout}
+              sx={{ mr: 2 }}
+            >
+              Logout
+            </Button>
+            <Button
+              variant="outlined"
+              onClick={() => navigate('/home')}
+            >
+              Back to Dashboard
+            </Button>
+          </Box>
+        </Paper>
+      </Box>
     </Container>
   );
 };

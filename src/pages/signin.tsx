@@ -1,8 +1,8 @@
 import React, { useContext, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
 import SignInForm from '../components/auth/signin';
 import { AuthContext } from '../context/AuthContext';
+import { authApi } from '../services/api';
 
 const SignIn = () => {
   const { login } = useContext(AuthContext);
@@ -14,34 +14,20 @@ const SignIn = () => {
     setLoading(true);
     setError('');
     try {
-      interface User {
-        id: string;
-        username: string;
-        email: string;
-      }
-
-      interface LoginResponse {
-        user: User;
-        token: string;
-      }
-
-      const response = await axios.post<LoginResponse>('http://localhost:4000/api/auth/login', {
-        emailOrUsername: data.identifier,
-        password: data.password,
-      });
+      const response = await authApi.login(data.identifier, data.password);
 
       const userWithToken = {
-        id: response.data.user.id,
-        firstName: '', 
-        lastName: '',  
-        userName: response.data.user.username,
-        emailAddress: response.data.user.email,
-        token: response.data.token,
+        id: response.user.id,
+        firstName: response.user.firstName || '', 
+        lastName: response.user.lastName || '',  
+        userName: response.user.username,
+        emailAddress: response.user.email,
+        token: response.token,
       };
       login(userWithToken);
       navigate('/home');
-    } catch {
-      setError('Invalid credentials');
+    } catch (error: any) {
+      setError(error.response?.data?.error || 'Invalid credentials');
     } finally {
       setLoading(false);
     }

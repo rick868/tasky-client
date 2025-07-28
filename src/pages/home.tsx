@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Box,
@@ -26,6 +26,8 @@ import {
   Toolbar,
   AppBar,
   ListItemButton,
+  Alert,
+  Snackbar,
 } from '@mui/material';
 import {
   Menu as MenuIcon,
@@ -39,42 +41,38 @@ import {
   Add as AddIcon,
   Delete as DeleteIcon,
 } from '@mui/icons-material';
+import { useContext } from 'react';
+import { AuthContext } from '../context/AuthContext';
+import { taskApi } from '../services/api';
+import type { Task } from '../services/api';
 
 const drawerWidth = 240;
-
-interface Task {
-  id: string;
-  title: string;
-  dueDate?: string | null;
-  priority: 'High' | 'Medium' | 'Low';
-  project?: string | null;
-  labels: string[];
-  status: string;
-  isCompleted: boolean;
-  isDeleted: boolean;
-  description?: string;
-}
-
 
 const Home = () => {
   const navigate = useNavigate();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+  const { user, logout } = useContext(AuthContext);
 
   const [mobileOpen, setMobileOpen] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(!isMobile);
   const [selectedView, setSelectedView] = useState('My Tasks');
-  const [tasks, setTasks] = useState(() => {
-  
-  });
+  const [tasks, setTasks] = useState<Task[]>([]);
+  const [loading, setLoading] = useState(false);
   const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
   const [quickAddOpen, setQuickAddOpen] = useState(false);
   const [newTaskName, setNewTaskName] = useState('');
+  const [newTaskDescription, setNewTaskDescription] = useState('');
   const [newTaskDueDate, setNewTaskDueDate] = useState('');
   const [newTaskProject, setNewTaskProject] = useState('');
   const [newTaskTags, setNewTaskTags] = useState('');
   const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
   const [taskToDelete, setTaskToDelete] = useState<Task | null>(null);
+  const [snackbar, setSnackbar] = useState<{ open: boolean; message: string; severity: 'success' | 'error' }>({
+    open: false,
+    message: '',
+    severity: 'success'
+  });
 
   
   const [filterOpen, setFilterOpen] = useState(false);
@@ -87,6 +85,27 @@ const Home = () => {
   useEffect(() => {
     setSidebarOpen(!isMobile);
   }, [isMobile]);
+
+  const showSnackbar = useCallback((message: string, severity: 'success' | 'error') => {
+    setSnackbar({ open: true, message, severity });
+  }, []);
+
+  const fetchTasks = useCallback(async () => {
+    setLoading(true);
+    try {
+      const tasksData = await taskApi.getTasks();
+      setTasks(tasksData);
+    } catch (error) {
+      console.error('Error fetching tasks:', error);
+      showSnackbar('Failed to fetch tasks', 'error');
+    } finally {
+      setLoading(false);
+    }
+  }, [showSnackbar]);
+
+  useEffect(() => {
+    fetchTasks();
+  }, [fetchTasks]);
 
   const handleDrawerToggle = () => {
     setMobileOpen(!mobileOpen);
@@ -107,6 +126,11 @@ const Home = () => {
     setAnchorEl(null);
   };
 
+  const handleLogout = () => {
+    logout();
+    navigate('/signin');
+  };
+
   const handleQuickAddOpen = () => {
     setQuickAddOpen(true);
   };
@@ -114,30 +138,33 @@ const Home = () => {
   const handleQuickAddClose = () => {
     setQuickAddOpen(false);
     setNewTaskName('');
+    setNewTaskDescription('');
     setNewTaskDueDate('');
     setNewTaskProject('');
     setNewTaskTags('');
   };
 
-  const handleAddTask = () => {
+  const handleAddTask = async () => {
     if (!newTaskName.trim()) return;
 
-    const newTask = {
-      id: Date.now().toString(),
-      title: newTaskName.trim(),
-      dueDate: newTaskDueDate || null,
-      project: newTaskProject.trim() || null,
-      labels: newTaskTags.split(',').map(tag => tag.trim()).filter(tag => tag !== ''),
-      priority: 'Medium',
-      status: 'Not Started',
-      isCompleted: false,
-      isDeleted: false,
-    };
+    try {
+      const taskData = {
+        title: newTaskName.trim(),
+        description: newTaskDescription.trim() || undefined,
+        dueDate: newTaskDueDate || undefined,
+        project: newTaskProject.trim() || undefined,
+        labels: newTaskTags.split(',').map(tag => tag.trim()).filter(tag => tag !== ''),
+        priority: 'Medium' as const,
+      };
 
-    const updatedTasks = [...tasks, newTask];
-    setTasks(updatedTasks);
-    localStorage.setItem('tasks', JSON.stringify(updatedTasks));
-    handleQuickAddClose();
+      const newTask = await taskApi.createTask(taskData);
+      setTasks(prev => [newTask, ...prev]);
+      showSnackbar('Task created successfully', 'success');
+      handleQuickAddClose();
+    } catch (error) {
+      console.error('Error creating task:', error);
+      showSnackbar('Failed to create task', 'error');
+    }
   };
 
   const handleDeleteClick = (task: Task) => {
@@ -145,36 +172,32 @@ const Home = () => {
     setConfirmDeleteOpen(true);
   };
 
-  const handleConfirmDelete = () => {
-    if (taskToDelete) {
-      let updatedTasks;
-      if (selectedView === 'Trash') {
-        updatedTasks = tasks.filter((t: Task) => t.id !== taskToDelete.id);
-      } else {
-        updatedTasks = tasks.map((t: Task) => {
-          if (t.id === taskToDelete.id) {
-            return { ...t, isDeleted: true };
-          }
-          return t;
-        });
-      }
+  const handleConfirmDelete = async () => {
+    if (!taskToDelete) return;
 
-      setTasks(updatedTasks);
-      localStorage.setItem('tasks', JSON.stringify(updatedTasks));
+    try {
+      await taskApi.deleteTask(taskToDelete.id);
+      setTasks(prev => prev.filter(t => t.id !== taskToDelete.id));
+      showSnackbar('Task deleted successfully', 'success');
       setTaskToDelete(null);
       setConfirmDeleteOpen(false);
+    } catch (error) {
+      console.error('Error deleting task:', error);
+      showSnackbar('Failed to delete task', 'error');
     }
   };
 
-  const handleRestoreTask = (taskId : string) => {
-    const updatedTasks = tasks.map((t: Task) => {
-      if (t.id === taskId) {
-        return { ...t, isDeleted: false };
-      }
-      return t;
-    });
-    setTasks(updatedTasks);
-    localStorage.setItem('tasks', JSON.stringify(updatedTasks));
+  const handleRestoreTask = async (taskId: string) => {
+    try {
+      await taskApi.restoreTask(taskId);
+      setTasks(prev => prev.map(t => 
+        t.id === taskId ? { ...t, isDeleted: false } : t
+      ));
+      showSnackbar('Task restored successfully', 'success');
+    } catch (error) {
+      console.error('Error restoring task:', error);
+      showSnackbar('Failed to restore task', 'error');
+    }
   };
 
   const handleCancelDelete = () => {
@@ -182,18 +205,26 @@ const Home = () => {
     setConfirmDeleteOpen(false);
   };
 
-  const handleToggleComplete = (taskId: string) => {
-    const updatedTasks = tasks.map((task: Task) => {
-      if (task.id === taskId) {
-        return { ...task, isCompleted: !task.isCompleted };
-      }
-      return task;
-    });
-    setTasks(updatedTasks);
-    localStorage.setItem('tasks', JSON.stringify(updatedTasks));
+  const handleToggleComplete = async (taskId: string) => {
+    try {
+      const task = tasks.find(t => t.id === taskId);
+      if (!task) return;
+
+      const updatedTask = task.isCompleted 
+        ? await taskApi.incompleteTask(taskId)
+        : await taskApi.completeTask(taskId);
+      
+      setTasks(prev => prev.map(t => 
+        t.id === taskId ? updatedTask : t
+      ));
+      
+      showSnackbar(`Task ${task.isCompleted ? 'marked incomplete' : 'completed'}`, 'success');
+    } catch (error) {
+      console.error('Error updating task:', error);
+      showSnackbar('Failed to update task', 'error');
+    }
   };
 
-  
   const handleApplyFilters = () => {
     setFilterOpen(false); 
   };
@@ -216,11 +247,10 @@ const Home = () => {
     { label: 'Trash', icon: <DeleteIcon />, description: 'Deleted tasks', key: 'Trash' },
   ];
 
-
   const renderTaskList = () => {
     let filteredTasks = tasks.filter((task: Task) => !task.isDeleted); 
 
-    
+    // Apply filters
     if (filterName) {
       filteredTasks = filteredTasks.filter((task: Task) => 
         task.title.toLowerCase().includes(filterName.toLowerCase())
@@ -228,7 +258,7 @@ const Home = () => {
     }
 
     if (filterDate) {
-      filteredTasks = filteredTasks.filter((task:Task) => {
+      filteredTasks = filteredTasks.filter((task: Task) => {
         if (!task.dueDate) return false;
         const dueDate = new Date(task.dueDate);
         return dueDate.toDateString() === new Date(filterDate).toDateString();
@@ -244,19 +274,16 @@ const Home = () => {
     }
 
     if (filterLabel) {
-      filteredTasks = filteredTasks.filter((task: Task ) => task.labels.includes(filterLabel));
+      filteredTasks = filteredTasks.filter((task: Task) => task.labels.includes(filterLabel));
     }
 
-
+    // Apply view filters
     if (selectedView === 'My Tasks') {
       filteredTasks = filteredTasks.filter((task: Task) => !task.isCompleted);
     } else if (selectedView === 'Completed') {
       filteredTasks = tasks.filter((task: Task) => task.isCompleted && !task.isDeleted);
     } else if (selectedView === 'Inbox') {
-      filteredTasks = tasks.filter((task: Task)=> !task.isDeleted);
-      if (filteredTasks.length === 0) {
-        filteredTasks = tasksSample.filter(task => !task.isDeleted);
-      }
+      filteredTasks = tasks.filter((task: Task) => !task.isDeleted);
     } else if (selectedView === 'Today') {
       const today = new Date();
       filteredTasks = filteredTasks.filter((task: Task) => {
@@ -275,6 +302,14 @@ const Home = () => {
       });
     } else if (selectedView === 'Trash') {
       filteredTasks = tasks.filter((task: Task) => task.isDeleted);
+    }
+
+    if (loading) {
+      return (
+        <Box sx={{ textAlign: 'center', mt: 8 }}>
+          <Typography variant="h6">Loading tasks...</Typography>
+        </Box>
+      );
     }
 
     if (filteredTasks.length === 0) {
@@ -530,7 +565,7 @@ const Home = () => {
             sx={{ ml: 1 }}
           >
             <Avatar sx={{ width: 32, height: 32, bgcolor: theme.palette.secondary.light }}>
-              U
+              {user?.userName?.charAt(0) || 'U'}
             </Avatar>
           </IconButton>
           <Menu
@@ -548,9 +583,10 @@ const Home = () => {
             open={Boolean(anchorEl)}
             onClose={handleProfileMenuClose}
           >
-            <MenuItem onClick={handleProfileMenuClose}>Profile</MenuItem>
-            <MenuItem onClick={handleProfileMenuClose}>My account</MenuItem>
-            <MenuItem onClick={handleProfileMenuClose}>Logout</MenuItem>
+            <MenuItem onClick={() => { handleProfileMenuClose(); navigate('/profile'); }}>
+              Profile
+            </MenuItem>
+            <MenuItem onClick={handleLogout}>Logout</MenuItem>
           </Menu>
         </Toolbar>
       </AppBar>
@@ -660,6 +696,16 @@ const Home = () => {
                 handleAddTask();
               }
             }}
+          />
+          <TextField
+            label="Description"
+            value={newTaskDescription}
+            onChange={(e) => setNewTaskDescription(e.target.value)}
+            fullWidth
+            margin="normal"
+            variant="outlined"
+            multiline
+            rows={3}
           />
           <TextField
             label="Due Date"
@@ -829,6 +875,20 @@ const Home = () => {
           </Box>
         </Paper>
       </Modal>
+
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={6000}
+        onClose={() => setSnackbar({ ...snackbar, open: false })}
+      >
+        <Alert 
+          onClose={() => setSnackbar({ ...snackbar, open: false })} 
+          severity={snackbar.severity}
+          sx={{ width: '100%' }}
+        >
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
 
     </Box>
   );
