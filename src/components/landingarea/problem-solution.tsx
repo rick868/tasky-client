@@ -1,10 +1,9 @@
-import React from 'react';
 import { Box, Typography } from '@mui/material';
 
 const ProblemSolution = () => {
   return (
     <Box sx={{ py: 8, px: 2, maxWidth: 1200, margin: 'auto', display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: 4 }}>
-      {/* Left - Problem */}
+     
       <Box sx={{ flex: '1 1 300px', textAlign: 'center' }}>
         <Box
           component="img"
@@ -17,7 +16,7 @@ const ProblemSolution = () => {
         </Typography>
       </Box>
 
-      {/* Right - Solution */}
+      
       <Box sx={{ flex: '1 1 300px', textAlign: 'center' }}>
         <Box
           component="img"
@@ -26,7 +25,7 @@ const ProblemSolution = () => {
           sx={{ maxWidth: '100%', mb: 3 }}
         />
         <Typography variant="h6" sx={{ mb: 2, color: '#000' }}>
-          ZenFlow brings a new paradigm. Our intuitive design and intelligent features gently guide you to clarity, so you can breathe, focus, and thrive.
+          Tasky brings a new paradigm. Our intuitive design and intelligent features gently guide you to clarity, so you can breathe, focus, and thrive.
         </Typography>
       </Box>
     </Box>

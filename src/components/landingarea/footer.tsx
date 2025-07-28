@@ -1,4 +1,3 @@
-
 import { Box, Typography, Link, Stack } from '@mui/material';
 import { Twitter, LinkedIn, Instagram } from '@mui/icons-material';
 
@@ -15,7 +14,7 @@ const Footer = () => {
         </Box>
 
         
-        <Box sx={{ flex: '3 1 600px', display: 'flex', justifyContent: 'space-between',  alignItems: 'center', flexWrap: 'wrap' }}>
+        <Box sx={{ flex: '3 1 600px', display: 'flex', justifyContent: 'space-around',  alignItems: 'center', flexWrap: 'wrap' }}>
           <Box>
             <Typography variant="subtitle1" sx={{ mb: 1 }}>Product</Typography>
             <Stack spacing={0.5}>

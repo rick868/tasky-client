@@ -1,16 +1,16 @@
-import React, { useState } from 'react';
+import  { useState } from 'react';
 import { Box, Typography, Avatar, Button } from '@mui/material';
 
 const testimonials = [
   {
     name: 'Aisha K., Freelance Designer',
     image: '/assets/images/aisha-k.jpg',
-    quote: "ZenFlow brought calm to my chaotic client deadlines. I've never felt so in control. Absolutely life-changing!",
+    quote: "Tasky brought calm to my chaotic client deadlines. I've never felt so in control. Absolutely life-changing!",
   },
   {
     name: 'David M., Startup Founder',
     image: '/assets/images/david-m.jpg',
-    quote: "Our team's collaboration skyrocketed with ZenFlow. Tasks are clearer, communication is seamless. Highly recommend!",
+    quote: "Our team's collaboration skyrocketed with Tasky. Tasks are clearer, communication is seamless. Highly recommend!",
   },
 ];
 
@@ -54,7 +54,7 @@ const TrustCommunity = () => {
         </Button>
       </Box>
       <Typography variant="caption" sx={{ mt: 4, display: 'block' }}>
-        Join 500,000+ others finding their Zen.
+        Join 500,000+ others in managing their Tasks.
       </Typography>
     </Box>
   );
