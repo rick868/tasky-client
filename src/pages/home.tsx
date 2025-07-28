@@ -55,63 +55,6 @@ interface Task {
   description?: string;
 }
 
-const tasksSample: Task[] = [
-  {
-    id: '1',
-    title: 'Design Homepage',
-    dueDate: '2025-07-25',
-    priority: 'High',
-    project: 'Website Launch',
-    labels: ['Work', 'Urgent'],
-    status: 'Not Started',
-    isCompleted: false,
-    isDeleted: false,
-  },
-  {
-    id: '2',
-    title: 'Write Blog Post',
-    dueDate: '2025-07-28',
-    priority: 'Medium',
-    project: 'Content',
-    labels: ['Writing'],
-    status: 'In Progress',
-    isCompleted: false,
-    isDeleted: false,
-  },
-  {
-    id: '3',
-    title: 'Review PRD',
-    dueDate: '2025-07-19', 
-    priority: 'High',
-    project: 'Website Launch',
-    labels: ['Work'],
-    status: 'Not Started',
-    isCompleted: false,
-    isDeleted: false,
-  },
-  {
-    id: '4',
-    title: 'Plan Team Offsite',
-    dueDate: '2025-07-22', 
-    priority: 'Medium',
-    project: 'Team Building',
-    labels: ['Event'],
-    status: 'Not Started',
-    isCompleted: false,
-    isDeleted: false,
-  },
-    {
-      id: '5',
-      title: 'Submit Expense Report',
-      dueDate: '2025-07-10',
-      priority: 'High',
-      project: 'Admin',
-      labels: ['Finance'],
-      status: 'Not Started',
-      isCompleted: false,
-      isDeleted: false,
-    }
-  ];
 
 const Home = () => {
   const navigate = useNavigate();
