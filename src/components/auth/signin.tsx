@@ -18,7 +18,7 @@ const SignInForm = ({ onSubmit, loading, onSignUpClick, error }: Props) => {
 
   return (
     <Box sx={{ maxWidth: 400, margin: 'auto', mt: 5, p: 3, boxShadow: 3, borderRadius: 2, backgroundColor: '#fff' }}>
-      {/* Brand Logo */}
+      
       <Box sx={{ textAlign: 'center', mb: 3 }}>
         <img src="Tasky.png" alt="Tasky Logo" style={{ maxWidth: '150px' }} />
       </Box>
