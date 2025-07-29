@@ -219,6 +219,9 @@ const Home = () => {
       ));
       
       showSnackbar(`Task ${task.isCompleted ? 'marked incomplete' : 'completed'}`, 'success');
+      if (!task.isCompleted) {
+        setSelectedView('Completed');
+      }
     } catch (error) {
       console.error('Error updating task:', error);
       showSnackbar('Failed to update task', 'error');
@@ -572,7 +575,7 @@ const Home = () => {
             id="menu-appbar"
             anchorEl={anchorEl}
             anchorOrigin={{
-              vertical: 'top',
+              vertical: 'bottom',
               horizontal: 'right',
             }}
             keepMounted
