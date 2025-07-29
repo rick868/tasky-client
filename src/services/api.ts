@@ -2,7 +2,6 @@ import axios from 'axios';
 
 const API_BASE_URL = 'http://localhost:4000/api';
 
-
 const api = axios.create({
   baseURL: API_BASE_URL,
   headers: {
@@ -10,16 +9,13 @@ const api = axios.create({
   },
 });
 
-
 api.interceptors.request.use((config) => {
   const user = JSON.parse(localStorage.getItem('user') || 'null');
-  if (user?.token) {
+  if (user?.token && config.headers) {
     config.headers.Authorization = `Bearer ${user.token}`;
   }
   return config;
 });
-
-
 
 api.interceptors.response.use(
   (response) => response,
@@ -28,7 +24,8 @@ api.interceptors.response.use(
       localStorage.removeItem('user');
       window.location.href = '/signin';
     }
-    return Promise.reject(error);
+    const rejectionError = error instanceof Error ? error : new Error(error?.message || 'Unknown error');
+    return Promise.reject(rejectionError);
   }
 );
 
@@ -65,59 +62,56 @@ export interface UpdateTaskData {
   isCompleted?: boolean;
 }
 
+interface TasksResponse {
+  tasks: Task[];
+}
+
+interface TaskResponse {
+  task: Task;
+}
 
 export const taskApi = {
-  
   getTasks: async (): Promise<Task[]> => {
-    const response = await api.get('/tasks');
+    const response = await api.get<TasksResponse>('/tasks');
     return response.data.tasks || [];
   },
 
-  
   getTasksByStatus: async (status: 'active' | 'completed' | 'deleted'): Promise<Task[]> => {
-    const response = await api.get(`/tasks?status=${status}`);
+    const response = await api.get<TasksResponse>(`/tasks?status=${status}`);
     return response.data.tasks || [];
   },
 
-  
   createTask: async (taskData: CreateTaskData): Promise<Task> => {
-    const response = await api.post('/tasks', taskData);
+    const response = await api.post<TaskResponse>('/tasks', taskData);
     return response.data.task;
   },
 
-  
   updateTask: async (id: string, taskData: UpdateTaskData): Promise<Task> => {
-    const response = await api.patch(`/tasks/${id}`, taskData);
+    const response = await api.patch<TaskResponse>(`/tasks/${id}`, taskData);
     return response.data.task;
   },
 
-  
   deleteTask: async (id: string): Promise<void> => {
     await api.delete(`/tasks/${id}`);
   },
 
-  
   completeTask: async (id: string): Promise<Task> => {
-    const response = await api.patch(`/tasks/complete/${id}`);
+    const response = await api.patch<TaskResponse>(`/tasks/complete/${id}`);
     return response.data.task;
   },
 
-  // Incomplete task
   incompleteTask: async (id: string): Promise<Task> => {
-    const response = await api.patch(`/tasks/incomplete/${id}`);
+    const response = await api.patch<TaskResponse>(`/tasks/incomplete/${id}`);
     return response.data.task;
   },
 
-  // Restore task
   restoreTask: async (id: string): Promise<Task> => {
-    const response = await api.patch(`/tasks/restore/${id}`);
+    const response = await api.patch<TaskResponse>(`/tasks/restore/${id}`);
     return response.data.task;
   },
 };
 
-
 export const authApi = {
-  
   login: async (emailOrUsername: string, password: string) => {
     const response = await api.post('/auth/login', {
       emailOrUsername,
@@ -126,7 +120,6 @@ export const authApi = {
     return response.data;
   },
 
-  
   register: async (userData: {
     firstName: string;
     lastName: string;
@@ -138,7 +131,6 @@ export const authApi = {
     return response.data;
   },
 
-
   updatePassword: async (currentPassword: string, newPassword: string) => {
     const response = await api.patch('/auth/password', {
       currentPassword,
@@ -148,15 +140,13 @@ export const authApi = {
   },
 };
 
-
 export const userApi = {
-  
   getProfile: async () => {
     const response = await api.get('/user/profile');
     return response.data;
   },
 
-    updateProfile: async (userData: {
+  updateProfile: async (userData: {
     firstName?: string;
     lastName?: string;
     username?: string;

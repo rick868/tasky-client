@@ -1,4 +1,4 @@
-import React, { useContext, useState, useEffect } from 'react';
+import React, { useContext, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Box,
@@ -10,8 +10,8 @@ import {
   Avatar,
   Alert,
   Divider,
-  Grid,
 } from '@mui/material';
+
 import { AuthContext } from '../context/AuthContext';
 import { userApi, authApi } from '../services/api';
 
@@ -152,9 +152,9 @@ const Profile = () => {
             </Alert>
           )}
 
-          <Grid container spacing={3} sx={{ width: '100%' }}>
+          <Box sx={{ display: 'flex', gap: 3, flexWrap: 'wrap' }}>
             {/* Profile Information */}
-            <Grid item xs={12} md={6}>
+            <Box sx={{ flex: '1 1 300px' }}>
               <Typography variant="h6" gutterBottom>
                 Profile Information
               </Typography>
@@ -206,10 +206,10 @@ const Profile = () => {
                   {loading ? 'Updating...' : 'Update Profile'}
                 </Button>
               </Box>
-            </Grid>
+            </Box>
 
             {/* Password Change */}
-            <Grid item xs={12} md={6}>
+            <Box sx={{ flex: '1 1 300px' }}>
               <Typography variant="h6" gutterBottom>
                 Change Password
               </Typography>
@@ -251,8 +251,8 @@ const Profile = () => {
                   {loading ? 'Updating...' : 'Change Password'}
                 </Button>
               </Box>
-            </Grid>
-          </Grid>
+            </Box>
+          </Box>
 
           <Divider sx={{ width: '100%', my: 3 }} />
 

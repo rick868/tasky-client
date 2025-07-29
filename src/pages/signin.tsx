@@ -4,6 +4,17 @@ import SignInForm from '../components/auth/signin';
 import { AuthContext } from '../context/AuthContext';
 import { authApi } from '../services/api';
 
+interface LoginResponse {
+  user: {
+    id: string;
+    firstName: string;
+    lastName: string;
+    username: string;
+    email: string;
+  };
+  token: string;
+}
+
 const SignIn = () => {
   const { login } = useContext(AuthContext);
   const navigate = useNavigate();
@@ -14,7 +25,7 @@ const SignIn = () => {
     setLoading(true);
     setError('');
     try {
-      const response = await authApi.login(data.identifier, data.password);
+      const response = await authApi.login(data.identifier, data.password) as LoginResponse;
 
       const userWithToken = {
         id: response.user.id,
@@ -26,8 +37,8 @@ const SignIn = () => {
       };
       login(userWithToken);
       navigate('/home');
-    } catch (error: any) {
-      setError(error.response?.data?.error || 'Invalid credentials');
+    } catch (error: unknown) {
+      setError('Invalid credentials');
     } finally {
       setLoading(false);
     }

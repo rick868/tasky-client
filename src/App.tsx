@@ -1,7 +1,7 @@
 import  { useContext } from 'react';
 import type { ReactNode } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
-import Registration from './pages/registration';
+
 import Home from './pages/home';
 import Profile from './pages/profile';
 import Landing from './pages/landing';
@@ -33,7 +33,7 @@ const App = () => {
       <Routes>
         <Route path="/signin" element={<SignIn />} />
         <Route path="/signup" element={<SignUp />} />
-        <Route path="/register" element={<Registration />} />
+        
         <Route path="/" element={<Landing />} />
         <Route
           path="/home"
