@@ -273,7 +273,7 @@ const Home = () => {
     }
 
     if (filterProject) {
-      filteredTasks = filteredTasks.filter((task: Task) => task.project === filterProject);
+      filteredTasks = filteredTasks.filter((task: Task) => task.project && task.project === filterProject);
     }
 
     if (filterLabel) {
@@ -494,7 +494,7 @@ const Home = () => {
   );
 
   const allProjects = [...new Set(tasks.map((task: Task) => task.project).filter(Boolean))];
-  const allLabels = [...new Set(tasks.flatMap((task: Task) => task.labels).filter(Boolean))];
+  const allLabels = [...new Set(tasks.flatMap((task: Task) => task.labels || []).filter(Boolean))];
 
   return (
     <Box sx={{ display: 'flex', height: '100vh', bgcolor: theme.palette.background.default }}>
