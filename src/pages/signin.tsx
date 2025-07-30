@@ -1,7 +1,6 @@
-import React, { useContext, useState } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import SignInForm from '../components/auth/signin';
-import { AuthContext } from '../context/AuthContext';
 import { useUserStore } from '../stores/userStore';
 import { authApi } from '../services/api';
 

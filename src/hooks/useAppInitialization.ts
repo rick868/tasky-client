@@ -7,7 +7,7 @@ export const useAppInitialization = () => {
   const { user, isAuthenticated } = useUserStore();
 
   useEffect(() => {
-    // Only fetch tasks if user is authenticated
+   
     if (isAuthenticated && user) {
       fetchTasks();
     }

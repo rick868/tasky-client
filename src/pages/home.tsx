@@ -59,7 +59,6 @@ const Home = () => {
   const {
     tasks,
     loading,
-    error,
     fetchTasks,
     createTask,
     markComplete,
@@ -69,10 +68,7 @@ const Home = () => {
   } = useTaskStore();
 
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [sidebarOpen, setSidebarOpen] = useState(!isMobile);
   const [selectedView, setSelectedView] = useState('My Tasks');
-  const [tasks, setTasks] = useState<Task[]>([]);
-  const [loading, setLoading] = useState(false);
   const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
   const [quickAddOpen, setQuickAddOpen] = useState(false);
   const [newTaskName, setNewTaskName] = useState('');
@@ -95,9 +91,7 @@ const Home = () => {
   const [filterProject, setFilterProject] = useState('');
   const [filterLabel, setFilterLabel] = useState(''); 
 
-  useEffect(() => {
-    setSidebarOpen(!isMobile);
-  }, [isMobile]);
+
 
   
   useEffect(() => {

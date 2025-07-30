@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { Task, taskApi } from '../services/api';
+import type { Task, CreateTaskData } from '../services/api';
+import { taskApi } from '../services/api';
 
 interface TaskState {
   tasks: Task[];
@@ -18,7 +19,7 @@ interface TaskState {
   
  
   fetchTasks: () => Promise<void>;
-  createTask: (taskData: any) => Promise<void>;
+  createTask: (taskData: CreateTaskData) => Promise<void>;
   markComplete: (taskId: string) => Promise<void>;
   markIncomplete: (taskId: string) => Promise<void>;
   restoreTaskAsync: (taskId: string) => Promise<void>;
@@ -27,7 +28,7 @@ interface TaskState {
 
 export const useTaskStore = create<TaskState>()(
   persist(
-    (set, get) => ({
+    (set) => ({
       tasks: [],
       loading: false,
       error: null,
