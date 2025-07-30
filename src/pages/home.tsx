@@ -189,11 +189,16 @@ const Home = () => {
 
   const handleRestoreTask = async (taskId: string) => {
     try {
-      await taskApi.restoreTask(taskId);
-      setTasks(prev => prev.map(t => 
-        t.id === taskId ? { ...t, isDeleted: false } : t
-      ));
-      showSnackbar('Task restored successfully', 'success');
+      const updatedTask = await taskApi.restoreTask(taskId);
+      
+      if (updatedTask && updatedTask.id) {
+        setTasks(prev => prev.map(t => 
+          t.id === taskId ? updatedTask : t
+        ));
+        showSnackbar('Task restored successfully', 'success');
+      } else {
+        throw new Error('Invalid response from server');
+      }
     } catch (error) {
       console.error('Error restoring task:', error);
       showSnackbar('Failed to restore task', 'error');
@@ -214,13 +219,18 @@ const Home = () => {
         ? await taskApi.incompleteTask(taskId)
         : await taskApi.completeTask(taskId);
       
-      setTasks(prev => prev.map(t => 
-        t.id === taskId ? updatedTask : t
-      ));
       
-      showSnackbar(`Task ${task.isCompleted ? 'marked incomplete' : 'completed'}`, 'success');
-      if (!task.isCompleted) {
-        setSelectedView('Completed');
+      if (updatedTask && updatedTask.id) {
+        setTasks(prev => prev.map(t => 
+          t.id === taskId ? updatedTask : t
+        ));
+        
+        showSnackbar(`Task ${task.isCompleted ? 'marked incomplete' : 'completed'}`, 'success');
+        if (!task.isCompleted) {
+          setSelectedView('Completed');
+        }
+      } else {
+        throw new Error('Invalid response from server');
       }
     } catch (error) {
       console.error('Error updating task:', error);
@@ -253,7 +263,7 @@ const Home = () => {
   const renderTaskList = () => {
     let filteredTasks = tasks.filter((task: Task) => !task.isDeleted); 
 
-    // Apply filters
+   
     if (filterName) {
       filteredTasks = filteredTasks.filter((task: Task) => 
         task.title.toLowerCase().includes(filterName.toLowerCase())
@@ -273,14 +283,14 @@ const Home = () => {
     }
 
     if (filterProject) {
-      filteredTasks = filteredTasks.filter((task: Task) => task.project && task.project === filterProject);
+      filteredTasks = filteredTasks.filter((task: Task) => task.project && task.project.trim() && task.project === filterProject);
     }
 
     if (filterLabel) {
       filteredTasks = filteredTasks.filter((task: Task) => task.labels.includes(filterLabel));
     }
 
-    // Apply view filters
+    
     if (selectedView === 'My Tasks') {
       filteredTasks = filteredTasks.filter((task: Task) => !task.isCompleted);
     } else if (selectedView === 'Completed') {
@@ -417,7 +427,7 @@ const Home = () => {
                             color={new Date(task.dueDate) < new Date() && !task.isCompleted ? 'error' : 'default'}
                           />
                         )}
-                        {task.project && (
+                        {task.project && task.project.trim() && (
                           <Chip label={`#${task.project}`} size="small" variant="outlined" />
                         )}
                         {task.labels?.map(label => (
@@ -493,7 +503,7 @@ const Home = () => {
     </Box>
   );
 
-  const allProjects = [...new Set(tasks.map((task: Task) => task.project).filter(Boolean))];
+  const allProjects = [...new Set(tasks.map((task: Task) => task.project).filter((project): project is string => Boolean(project)))];
   const allLabels = [...new Set(tasks.flatMap((task: Task) => task.labels || []).filter(Boolean))];
 
   return (
