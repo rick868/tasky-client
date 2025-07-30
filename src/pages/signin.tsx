@@ -2,6 +2,7 @@ import React, { useContext, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import SignInForm from '../components/auth/signin';
 import { AuthContext } from '../context/AuthContext';
+import { useUserStore } from '../stores/userStore';
 import { authApi } from '../services/api';
 
 interface LoginResponse {
@@ -16,7 +17,7 @@ interface LoginResponse {
 }
 
 const SignIn = () => {
-  const { login } = useContext(AuthContext);
+  const { setUser } = useUserStore();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -35,7 +36,7 @@ const SignIn = () => {
         emailAddress: response.user.email,
         token: response.token,
       };
-      login(userWithToken);
+      setUser(userWithToken);
       navigate('/home');
     } catch (error: unknown) {
       setError('Invalid credentials');

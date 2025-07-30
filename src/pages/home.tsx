@@ -1,49 +1,50 @@
-import { useState, useEffect, useCallback } from 'react';
+import React, { useContext, useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Box,
+  AppBar,
+  Toolbar,
   Typography,
-  TextField,
-  Button,
-  IconButton,
-  Avatar,
-  Badge,
+  Drawer,
   List,
   ListItem,
-  ListItemText,
-  Chip,
-  Drawer,
+  ListItemButton,
   ListItemIcon,
+  ListItemText,
+  IconButton,
+  Button,
+  Avatar,
   Menu,
   MenuItem,
-  Modal,
+  Badge,
+  useTheme,
+  useMediaQuery,
   Paper,
-  Select,
+  List as MuiList,
+  Chip,
+  Modal,
+  TextField,
   FormControl,
   InputLabel,
-  useMediaQuery,
-  useTheme,
-  Toolbar,
-  AppBar,
-  ListItemButton,
-  Alert,
+  Select,
+  MenuItem as SelectMenuItem,
   Snackbar,
+  Alert,
 } from '@mui/material';
 import {
   Menu as MenuIcon,
-  Notifications as NotificationsIcon,
-  CheckCircle as CheckCircleIcon,
-  Inbox as InboxIcon,
-  CalendarToday as CalendarTodayIcon,
-  Today as TodayIcon,
-  Check as CheckIcon,
-  FilterList as FilterListIcon,
   Add as AddIcon,
+  CheckCircle as CheckCircleIcon,
+  Check as CheckIcon,
+  Inbox as InboxIcon,
+  Today as TodayIcon,
+  CalendarToday as CalendarTodayIcon,
   Delete as DeleteIcon,
+  Notifications as NotificationsIcon,
 } from '@mui/icons-material';
-import { useContext } from 'react';
+
 import { AuthContext } from '../context/AuthContext';
-import { taskApi } from '../services/api';
+import { useTaskStore } from '../stores/taskStore';
 import type { Task } from '../services/api';
 
 const drawerWidth = 240;
@@ -52,7 +53,20 @@ const Home = () => {
   const navigate = useNavigate();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
-  const { user, logout } = useContext(AuthContext);
+  const { user, logout } = useContext(AuthContext)!;
+
+  
+  const {
+    tasks,
+    loading,
+    error,
+    fetchTasks,
+    createTask,
+    markComplete,
+    markIncomplete,
+    restoreTaskAsync,
+    deleteTaskAsync,
+  } = useTaskStore();
 
   const [mobileOpen, setMobileOpen] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(!isMobile);
@@ -74,7 +88,6 @@ const Home = () => {
     severity: 'success'
   });
 
-  
   const [filterOpen, setFilterOpen] = useState(false);
   const [filterName, setFilterName] = useState(''); 
   const [filterDate, setFilterDate] = useState(''); 
@@ -86,26 +99,14 @@ const Home = () => {
     setSidebarOpen(!isMobile);
   }, [isMobile]);
 
-  const showSnackbar = useCallback((message: string, severity: 'success' | 'error') => {
-    setSnackbar({ open: true, message, severity });
-  }, []);
-
-  const fetchTasks = useCallback(async () => {
-    setLoading(true);
-    try {
-      const tasksData = await taskApi.getTasks();
-      setTasks(tasksData);
-    } catch (error) {
-      console.error('Error fetching tasks:', error);
-      showSnackbar('Failed to fetch tasks', 'error');
-    } finally {
-      setLoading(false);
-    }
-  }, [showSnackbar]);
-
+  
   useEffect(() => {
     fetchTasks();
   }, [fetchTasks]);
+
+  const showSnackbar = useCallback((message: string, severity: 'success' | 'error') => {
+    setSnackbar({ open: true, message, severity });
+  }, []);
 
   const handleDrawerToggle = () => {
     setMobileOpen(!mobileOpen);
@@ -157,8 +158,7 @@ const Home = () => {
         priority: 'Medium' as const,
       };
 
-      const newTask = await taskApi.createTask(taskData);
-      setTasks(prev => [newTask, ...prev]);
+      await createTask(taskData);
       showSnackbar('Task created successfully', 'success');
       handleQuickAddClose();
     } catch (error) {
@@ -176,8 +176,7 @@ const Home = () => {
     if (!taskToDelete) return;
 
     try {
-      await taskApi.deleteTask(taskToDelete.id);
-      setTasks(prev => prev.filter(t => t.id !== taskToDelete.id));
+      await deleteTaskAsync(taskToDelete.id);
       showSnackbar('Task deleted successfully', 'success');
       setTaskToDelete(null);
       setConfirmDeleteOpen(false);
@@ -189,16 +188,8 @@ const Home = () => {
 
   const handleRestoreTask = async (taskId: string) => {
     try {
-      const updatedTask = await taskApi.restoreTask(taskId);
-      
-      if (updatedTask && updatedTask.id) {
-        setTasks(prev => prev.map(t => 
-          t.id === taskId ? updatedTask : t
-        ));
-        showSnackbar('Task restored successfully', 'success');
-      } else {
-        throw new Error('Invalid response from server');
-      }
+      await restoreTaskAsync(taskId);
+      showSnackbar('Task restored successfully', 'success');
     } catch (error) {
       console.error('Error restoring task:', error);
       showSnackbar('Failed to restore task', 'error');
@@ -215,22 +206,13 @@ const Home = () => {
       const task = tasks.find(t => t.id === taskId);
       if (!task) return;
 
-      const updatedTask = task.isCompleted 
-        ? await taskApi.incompleteTask(taskId)
-        : await taskApi.completeTask(taskId);
-      
-      
-      if (updatedTask && updatedTask.id) {
-        setTasks(prev => prev.map(t => 
-          t.id === taskId ? updatedTask : t
-        ));
-        
-        showSnackbar(`Task ${task.isCompleted ? 'marked incomplete' : 'completed'}`, 'success');
-        if (!task.isCompleted) {
-          setSelectedView('Completed');
-        }
+      if (task.isCompleted) {
+        await markIncomplete(taskId);
+        showSnackbar('Task marked incomplete', 'success');
       } else {
-        throw new Error('Invalid response from server');
+        await markComplete(taskId);
+        showSnackbar('Task completed', 'success');
+        setSelectedView('Completed');
       }
     } catch (error) {
       console.error('Error updating task:', error);
@@ -263,7 +245,6 @@ const Home = () => {
   const renderTaskList = () => {
     let filteredTasks = tasks.filter((task: Task) => !task.isDeleted); 
 
-   
     if (filterName) {
       filteredTasks = filteredTasks.filter((task: Task) => 
         task.title.toLowerCase().includes(filterName.toLowerCase())
@@ -290,7 +271,6 @@ const Home = () => {
       filteredTasks = filteredTasks.filter((task: Task) => task.labels.includes(filterLabel));
     }
 
-    
     if (selectedView === 'My Tasks') {
       filteredTasks = filteredTasks.filter((task: Task) => !task.isCompleted);
     } else if (selectedView === 'Completed') {
@@ -359,7 +339,7 @@ const Home = () => {
     }
 
     return (
-      <List sx={{ width: '100%', maxWidth: 800, margin: '0 auto' }}>
+      <MuiList sx={{ width: '100%', maxWidth: 800, margin: '0 auto' }}>
         {filteredTasks.map((task: Task) => {
           let priorityColor: 'error' | 'warning' | 'info';
           if (task.priority === 'High') {
@@ -464,7 +444,7 @@ const Home = () => {
             </Paper>
           );
         })}
-      </List>
+      </MuiList>
     );
   };
 
@@ -614,295 +594,271 @@ const Home = () => {
         }}
         sx={{
           display: { xs: 'block', sm: 'none' },
-          '& .MuiDrawer-paper': { boxSizing: 'border-box', width: drawerWidth, pt: '64px' },
+          '& .MuiDrawer-paper': { boxSizing: 'border-box', width: drawerWidth },
         }}
       >
         {drawerContent}
       </Drawer>
-
-      
       <Drawer
         variant="permanent"
         sx={{
           display: { xs: 'none', sm: 'block' },
-          '& .MuiDrawer-paper': { boxSizing: 'border-box', width: drawerWidth, pt: '64px' },
+          '& .MuiDrawer-paper': { boxSizing: 'border-box', width: drawerWidth },
         }}
-        open={sidebarOpen}
+        open
       >
         {drawerContent}
       </Drawer>
-
-     
       <Box
         component="main"
         sx={{
           flexGrow: 1,
           p: 3,
-          mt: '64px',
           width: { sm: `calc(100% - ${drawerWidth}px)` },
-          ml: { sm: sidebarOpen ? `${drawerWidth}px` : 0 },
-          transition: theme.transitions.create(['margin', 'width'], {
-            easing: theme.transitions.easing.sharp,
-            duration: theme.transitions.duration.leavingScreen,
-          }),
-          ...(sidebarOpen && {
-            ml: { sm: `${drawerWidth}px` },
-            width: { sm: `calc(100% - ${drawerWidth}px)` },
-            transition: theme.transitions.create(['margin', 'width'], {
-              easing: theme.transitions.easing.easeOut,
-              duration: theme.transitions.duration.enteringScreen,
-            }),
-          }),
-          overflowY: 'auto',
-          minHeight: 'calc(100vh - 64px)',
+          mt: 8,
         }}
       >
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4 }}>
-          <Typography variant="h4" component="h1" sx={{ fontWeight: 600, color: theme.palette.text.primary }}>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+          <Typography variant="h4" component="h1" gutterBottom>
             {selectedView}
           </Typography>
-          {selectedView !== 'Trash' && (
-            <Button
-              variant="outlined"
-              startIcon={<FilterListIcon />}
-              sx={{ display: { xs: 'none', sm: 'flex' } }}
-              onClick={() => setFilterOpen(true)}
-            >
-              Filter
-            </Button>
-          )}
+          <Button
+            variant="outlined"
+            onClick={() => setFilterOpen(true)}
+            sx={{ display: { xs: 'none', sm: 'block' } }}
+          >
+            Filter
+          </Button>
         </Box>
+
         {renderTaskList()}
+
+        {/* Quick Add Modal */}
+        <Modal
+          open={quickAddOpen}
+          onClose={handleQuickAddClose}
+          aria-labelledby="quick-add-modal"
+        >
+          <Paper
+            sx={{
+              position: 'absolute',
+              top: '50%',
+              left: '50%',
+              transform: 'translate(-50%, -50%)',
+              width: { xs: '90%', sm: 450 },
+              p: 4,
+              borderRadius: typeof theme.shape.borderRadius === 'number'
+                ? theme.shape.borderRadius * 2
+                : `calc(${theme.shape.borderRadius} * 2)`,
+              boxShadow: theme.shadows[8],
+              outline: 'none',
+            }}
+          >
+            <Typography variant="h5" component="h2" gutterBottom sx={{ mb: 3, color: theme.palette.primary.main }}>
+              Quick Add Task
+            </Typography>
+            <TextField
+              label="Task Name"
+              value={newTaskName}
+              onChange={(e) => setNewTaskName(e.target.value)}
+              fullWidth
+              margin="normal"
+              variant="outlined"
+              autoFocus
+            />
+            <TextField
+              label="Description (optional)"
+              value={newTaskDescription}
+              onChange={(e) => setNewTaskDescription(e.target.value)}
+              fullWidth
+              margin="normal"
+              variant="outlined"
+              multiline
+              rows={2}
+            />
+            <TextField
+              label="Due Date (optional)"
+              type="date"
+              value={newTaskDueDate}
+              onChange={(e) => setNewTaskDueDate(e.target.value)}
+              fullWidth
+              margin="normal"
+              variant="outlined"
+              InputLabelProps={{ shrink: true }}
+            />
+            <TextField
+              label="Project (optional)"
+              value={newTaskProject}
+              onChange={(e) => setNewTaskProject(e.target.value)}
+              fullWidth
+              margin="normal"
+              variant="outlined"
+            />
+            <TextField
+              label="Tags (comma-separated, optional)"
+              value={newTaskTags}
+              onChange={(e) => setNewTaskTags(e.target.value)}
+              fullWidth
+              margin="normal"
+              variant="outlined"
+              placeholder="work, urgent, personal"
+            />
+            <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 3, gap: 2 }}>
+              <Button variant="outlined" onClick={handleQuickAddClose}>
+                Cancel
+              </Button>
+              <Button variant="contained" onClick={handleAddTask}>
+                Add Task
+              </Button>
+            </Box>
+          </Paper>
+        </Modal>
+
+        {/* Confirm Delete Modal */}
+        <Modal
+          open={confirmDeleteOpen}
+          onClose={handleCancelDelete}
+          aria-labelledby="confirm-delete-modal"
+        >
+          <Paper
+            sx={{
+              position: 'absolute',
+              top: '50%',
+              left: '50%',
+              transform: 'translate(-50%, -50%)',
+              width: { xs: '90%', sm: 400 },
+              p: 4,
+              borderRadius: typeof theme.shape.borderRadius === 'number'
+                ? theme.shape.borderRadius * 2
+                : `calc(${theme.shape.borderRadius} * 2)`,
+              boxShadow: theme.shadows[8],
+              outline: 'none',
+            }}
+          >
+            <Typography variant="h5" component="h2" gutterBottom sx={{ mb: 2, color: theme.palette.error.main }}>
+              Confirm Delete
+            </Typography>
+            <Typography variant="body1" sx={{ mb: 3 }}>
+              Are you sure you want to delete "{taskToDelete?.title}"? This action cannot be undone.
+            </Typography>
+            <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 2 }}>
+              <Button variant="outlined" onClick={handleCancelDelete}>
+                Cancel
+              </Button>
+              <Button variant="contained" color="error" onClick={handleConfirmDelete}>
+                Delete
+              </Button>
+            </Box>
+          </Paper>
+        </Modal>
+
+        {/* Filter Modal */}
+        <Modal
+          open={filterOpen}
+          onClose={() => setFilterOpen(false)}
+          aria-labelledby="filter-modal"
+        >
+          <Paper
+            sx={{
+              position: 'absolute',
+              top: '50%',
+              left: '50%',
+              transform: 'translate(-50%, -50%)',
+              width: { xs: '90%', sm: 450 },
+              p: 4,
+              borderRadius: typeof theme.shape.borderRadius === 'number'
+                ? theme.shape.borderRadius * 2
+                : `calc(${theme.shape.borderRadius} * 2)`,
+              boxShadow: theme.shadows[8],
+              outline: 'none',
+            }}
+          >
+            <Typography variant="h5" component="h2" gutterBottom sx={{ mb: 3, color: theme.palette.primary.main }}>
+              Filter Tasks
+            </Typography>
+            <TextField
+              label="Filter by Name"
+              value={filterName}
+              onChange={(e) => setFilterName(e.target.value)}
+              fullWidth
+              margin="normal"
+              variant="outlined"
+            />
+            <TextField
+              label="Filter by Due Date"
+              type="date"
+              value={filterDate}
+              onChange={(e) => setFilterDate(e.target.value)}
+              fullWidth
+              margin="normal"
+              variant="outlined"
+              InputLabelProps={{ shrink: true }}
+            />
+            <FormControl fullWidth margin="normal" variant="outlined">
+              <InputLabel>Filter by Priority</InputLabel>
+              <Select
+                value={filterPriority}
+                onChange={(e) => setFilterPriority(e.target.value)}
+                label="Filter by Priority"
+              >
+                <SelectMenuItem value=""><em>Any</em></SelectMenuItem>
+                <SelectMenuItem value="High">High</SelectMenuItem>
+                <SelectMenuItem value="Medium">Medium</SelectMenuItem>
+                <SelectMenuItem value="Low">Low</SelectMenuItem>
+              </Select>
+            </FormControl>
+            <FormControl fullWidth margin="normal" variant="outlined">
+              <InputLabel>Filter by Project</InputLabel>
+              <Select
+                value={filterProject}
+                onChange={(e) => setFilterProject(e.target.value)}
+                label="Filter by Project"
+              >
+                <SelectMenuItem value=""><em>Any</em></SelectMenuItem>
+                {allProjects.map(project => (
+                  <SelectMenuItem key={String(project)} value={String(project)}>{String(project)}</SelectMenuItem>
+                ))}
+              </Select>
+            </FormControl>
+            <FormControl fullWidth margin="normal" variant="outlined">
+              <InputLabel>Filter by Label</InputLabel>
+              <Select
+                value={filterLabel}
+                onChange={(e) => setFilterLabel(e.target.value)}
+                label="Filter by Label"
+              >
+                <SelectMenuItem value=""><em>Any</em></SelectMenuItem>
+                {allLabels.map(label => (
+                  <SelectMenuItem key={String(label)} value={String(label)}>{String(label)}</SelectMenuItem>
+                ))}
+              </Select>
+            </FormControl>
+            <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 3, gap: 2 }}>
+              <Button variant="outlined" onClick={handleClearFilters}>
+                Clear Filters
+              </Button>
+              <Button variant="contained" onClick={handleApplyFilters}>
+                Apply Filters
+              </Button>
+            </Box>
+          </Paper>
+        </Modal>
+
+        <Snackbar
+          open={snackbar.open}
+          autoHideDuration={6000}
+          onClose={() => setSnackbar({ ...snackbar, open: false })}
+        >
+          <Alert 
+            onClose={() => setSnackbar({ ...snackbar, open: false })} 
+            severity={snackbar.severity}
+            sx={{ width: '100%' }}
+          >
+            {snackbar.message}
+          </Alert>
+        </Snackbar>
+
       </Box>
-
-      
-      <Modal open={quickAddOpen} onClose={handleQuickAddClose}>
-        <Paper
-          sx={{
-            position: 'absolute',
-            top: '50%',
-            left: '50%',
-            transform: 'translate(-50%, -50%)',
-            width: { xs: '90%', sm: 450 },
-            p: 4,
-            borderRadius: typeof theme.shape.borderRadius === 'number'
-              ? theme.shape.borderRadius * 2
-              : `calc(${theme.shape.borderRadius} * 2)`,
-            boxShadow: theme.shadows[8],
-            outline: 'none',
-          }}
-        >
-          <Typography variant="h5" component="h2" gutterBottom sx={{ mb: 3, color: theme.palette.primary.main }}>
-            Add New Task
-          </Typography>
-          <TextField
-            label="Task Name"
-            value={newTaskName}
-            onChange={(e) => setNewTaskName(e.target.value)}
-            fullWidth
-            margin="normal"
-            variant="outlined"
-            required
-            autoFocus
-            onKeyPress={(e) => {
-              if (e.key === 'Enter' && newTaskName.trim() !== '') {
-                handleAddTask();
-              }
-            }}
-          />
-          <TextField
-            label="Description"
-            value={newTaskDescription}
-            onChange={(e) => setNewTaskDescription(e.target.value)}
-            fullWidth
-            margin="normal"
-            variant="outlined"
-            multiline
-            rows={3}
-          />
-          <TextField
-            label="Due Date"
-            type="date"
-            value={newTaskDueDate}
-            onChange={(e) => setNewTaskDueDate(e.target.value)}
-            fullWidth
-            margin="normal"
-            variant="outlined"
-            slotProps={{
-              inputLabel: {
-                shrink: true,
-              },
-            }}
-          />
-          <TextField
-            label="Project"
-            value={newTaskProject}
-            onChange={(e) => setNewTaskProject(e.target.value)}
-            fullWidth
-            margin="normal"
-            variant="outlined"
-          />
-          <TextField
-            label="Tags (comma separated)"
-            value={newTaskTags}
-            onChange={(e) => setNewTaskTags(e.target.value)}
-            fullWidth
-            margin="normal"
-            variant="outlined"
-            helperText="E.g., work, personal, urgent"
-          />
-          <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 3, gap: 2 }}>
-            <Button variant="outlined" onClick={handleQuickAddClose} color="error">
-              Cancel
-            </Button>
-            <Button
-              variant="contained"
-              onClick={handleAddTask}
-              disabled={!newTaskName.trim()}
-            >
-              Add Task
-            </Button>
-          </Box>
-        </Paper>
-      </Modal>
-
-      
-      <Modal open={confirmDeleteOpen} onClose={handleCancelDelete}>
-        <Paper
-          sx={{
-            position: 'absolute',
-            top: '50%',
-            left: '50%',
-            transform: 'translate(-50%, -50%)',
-            width: { xs: '90%', sm: 350 },
-            p: 4,
-            borderRadius: typeof theme.shape.borderRadius === 'number'
-              ? theme.shape.borderRadius * 2
-              : `calc(${theme.shape.borderRadius} * 2)`,
-            boxShadow: theme.shadows[8],
-            outline: 'none',
-          }}
-        >
-          <Typography variant="h6" gutterBottom>
-            Confirm Deletion
-          </Typography>
-          <Typography variant="body1" sx={{ mb: 3 }}>
-            Are you sure you want to {selectedView === 'Trash' ? 'permanently delete' : 'move to trash'} "
-            <Typography component="span" fontWeight="bold">{taskToDelete?.title}</Typography>"?
-          </Typography>
-          <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 2 }}>
-            <Button variant="outlined" onClick={handleCancelDelete}>
-              Cancel
-            </Button>
-            <Button variant="contained" color="error" onClick={handleConfirmDelete}>
-              {selectedView === 'Trash' ? 'Permanently Delete' : 'Move to Trash'}
-            </Button>
-          </Box>
-        </Paper>
-      </Modal>
-
-     
-      <Modal open={filterOpen} onClose={() => setFilterOpen(false)}>
-        <Paper
-          sx={{
-            position: 'absolute',
-            top: '50%',
-            left: '50%',
-            transform: 'translate(-50%, -50%)',
-            width: { xs: '90%', sm: 450 },
-            p: 4,
-            borderRadius: typeof theme.shape.borderRadius === 'number'
-              ? theme.shape.borderRadius * 2
-              : `calc(${theme.shape.borderRadius} * 2)`,
-            boxShadow: theme.shadows[8],
-            outline: 'none',
-          }}
-        >
-          <Typography variant="h5" component="h2" gutterBottom sx={{ mb: 3, color: theme.palette.primary.main }}>
-            Filter Tasks
-          </Typography>
-          <TextField
-            label="Filter by Name"
-            value={filterName}
-            onChange={(e) => setFilterName(e.target.value)}
-            fullWidth
-            margin="normal"
-            variant="outlined"
-          />
-          <TextField
-            label="Filter by Due Date"
-            type="date"
-            value={filterDate}
-            onChange={(e) => setFilterDate(e.target.value)}
-            fullWidth
-            margin="normal"
-            variant="outlined"
-            InputLabelProps={{ shrink: true }}
-          />
-          <FormControl fullWidth margin="normal" variant="outlined">
-            <InputLabel>Filter by Priority</InputLabel>
-            <Select
-              value={filterPriority}
-              onChange={(e) => setFilterPriority(e.target.value)}
-              label="Filter by Priority"
-            >
-              <MenuItem value=""><em>Any</em></MenuItem>
-              <MenuItem value="High">High</MenuItem>
-              <MenuItem value="Medium">Medium</MenuItem>
-              <MenuItem value="Low">Low</MenuItem>
-            </Select>
-          </FormControl>
-          <FormControl fullWidth margin="normal" variant="outlined">
-            <InputLabel>Filter by Project</InputLabel>
-            <Select
-              value={filterProject}
-              onChange={(e) => setFilterProject(e.target.value)}
-              label="Filter by Project"
-            >
-              <MenuItem value=""><em>Any</em></MenuItem>
-              {allProjects.map(project => (
-                <MenuItem key={String(project)} value={String(project)}>{String(project)}</MenuItem>
-              ))}
-            </Select>
-          </FormControl>
-          <FormControl fullWidth margin="normal" variant="outlined">
-            <InputLabel>Filter by Label</InputLabel>
-            <Select
-              value={filterLabel}
-              onChange={(e) => setFilterLabel(e.target.value)}
-              label="Filter by Label"
-            >
-              <MenuItem value=""><em>Any</em></MenuItem>
-              {allLabels.map(label => (
-                <MenuItem key={String(label)} value={String(label)}>{String(label)}</MenuItem>
-              ))}
-            </Select>
-          </FormControl>
-          <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 3, gap: 2 }}>
-            <Button variant="outlined" onClick={handleClearFilters}>
-              Clear Filters
-            </Button>
-            <Button variant="contained" onClick={handleApplyFilters}>
-              Apply Filters
-            </Button>
-          </Box>
-        </Paper>
-      </Modal>
-
-      <Snackbar
-        open={snackbar.open}
-        autoHideDuration={6000}
-        onClose={() => setSnackbar({ ...snackbar, open: false })}
-      >
-        <Alert 
-          onClose={() => setSnackbar({ ...snackbar, open: false })} 
-          severity={snackbar.severity}
-          sx={{ width: '100%' }}
-        >
-          {snackbar.message}
-        </Alert>
-      </Snackbar>
-
     </Box>
   );
 };

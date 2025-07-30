@@ -12,12 +12,12 @@ import {
   Divider,
 } from '@mui/material';
 
-import { AuthContext } from '../context/AuthContext';
+import { useUserStore } from '../stores/userStore';
 import { userApi, authApi } from '../services/api';
 
 const Profile = () => {
   const navigate = useNavigate();
-  const { user, updateUserDetails, logout } = useContext(AuthContext);
+  const { user, updateUserDetails, logout } = useUserStore();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');

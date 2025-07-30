@@ -1,4 +1,4 @@
-import  { useContext } from 'react';
+import { useContext } from 'react';
 import type { ReactNode } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 
@@ -12,10 +12,11 @@ import NewTask from './pages/newTask';
 import Trash from './pages/trash';
 import UpdateTask from './pages/updateTask';
 import { AuthContext } from './context/AuthContext';
+import { useAppInitialization } from './hooks/useAppInitialization';
 import Header from './components/landingarea/header';
 
 const ProtectedRoute = ({ children }: { children: ReactNode }) => {
-  const { user } = useContext(AuthContext);
+  const { user } = useContext(AuthContext)!;
   if (!user) {
     return <Navigate to="/signin" replace />;
   }
@@ -24,6 +25,9 @@ const ProtectedRoute = ({ children }: { children: ReactNode }) => {
 
 const App = () => {
   const location = useLocation();
+  
+  // Initialize app with Zustand stores
+  useAppInitialization();
 
   const showHeader = location.pathname !== '/home' && location.pathname !== '/tasks';
 

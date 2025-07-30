@@ -1,5 +1,6 @@
-import  { createContext, useState, useEffect, useMemo, useCallback } from 'react';
+import { createContext, useEffect, useMemo, useCallback } from 'react';
 import type { ReactNode } from 'react';
+import { useUserStore } from '../stores/userStore';
 
 type User = {
   firstName: string;
@@ -12,99 +13,57 @@ type User = {
 
 type AuthContextType = {
   user: User | null;
-  login: (userData: User) => void;
+  isAuthenticated: boolean;
+  loading: boolean;
+  error: string | null;
+  setUser: (user: User | null) => void;
   logout: () => void;
-  updateUserDetails: (details: Partial<Omit<User, 'token'>>) => void;
-  updatePassword: (currentPassword: string, newPassword: string) => Promise<boolean>;
-  updateProfilePicture: (file: File) => void;
+  updateUserDetails: (details: Partial<User>) => void;
+  setLoading: (loading: boolean) => void;
+  setError: (error: string | null) => void;
 };
 
-export const AuthContext = createContext<AuthContextType>({
-  user: null,
-  login: () => {},
-  logout: () => {},
-  updateUserDetails: () => {},
-  updatePassword: async () => false,
-  updateProfilePicture: () => {},
-});
+export const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-type Props = {
-  children: ReactNode;
-};
+export const AuthProvider = ({ children }: { children: ReactNode }) => {
+  const {
+    user,
+    isAuthenticated,
+    loading,
+    error,
+    setUser,
+    logout,
+    updateUserDetails,
+    setLoading,
+    setError,
+  } = useUserStore();
 
-export const AuthProvider = ({ children }: Props) => {
-  const [user, setUser] = useState<User | null>(() => {
-    const storedUser = localStorage.getItem('user');
-    return storedUser ? JSON.parse(storedUser) : null;
-  });
-
+  // Initialize user from localStorage on mount
   useEffect(() => {
-    if (user) {
-      localStorage.setItem('user', JSON.stringify(user));
-    } else {
-      localStorage.removeItem('user');
-    }
-  }, [user]);
-
-  const login = useCallback((userData: User) => {
-    setUser(userData);
-  }, []);
-
-  const logout = useCallback(() => {
-    setUser(null);
-  }, []);
-
-  const updateUserDetails = useCallback((details: Partial<Omit<User, 'token'>>) => {
-    setUser((prevUser) => {
-      if (!prevUser) return prevUser;
-      const updatedUser = { ...prevUser, ...details };
-      localStorage.setItem('user', JSON.stringify(updatedUser));
-      return updatedUser;
-    });
-  }, []);
-
-  const updatePassword = useCallback(async (currentPassword: string, newPassword: string): Promise<boolean> => {
-    if (!user) return false;
-    try {
-      const response = await fetch('http://localhost:4000/api/user/update-password', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${user.token}`,
-        },
-        body: JSON.stringify({ currentPassword, newPassword }),
-      });
-      if (!response.ok) {
-        return false;
+    const storedUser = localStorage.getItem('user-storage');
+    if (storedUser) {
+      try {
+        const parsed = JSON.parse(storedUser);
+        if (parsed.state?.user) {
+          setUser(parsed.state.user);
+        }
+      } catch (error) {
+        console.error('Error parsing stored user:', error);
       }
-      const data = await response.json();
-      return data.success === true;
-    } catch (error) {
-      console.error('Error updating password:', error);
-      return false;
     }
-  }, [user]);
-
-  const updateProfilePicture = useCallback((file: File) => {
-    // Placeholder logic for profile picture upload
-    // In real app, upload file and update user profilePicture URL
-    const url = URL.createObjectURL(file);
-    setUser((prevUser) => {
-      if (!prevUser) return prevUser;
-      const updatedUser = { ...prevUser, profilePicture: url };
-      localStorage.setItem('user', JSON.stringify(updatedUser));
-      return updatedUser;
-    });
-  }, []);
+  }, [setUser]);
 
   const contextValue = useMemo(() => ({
     user,
-    login,
+    isAuthenticated,
+    loading,
+    error,
+    setUser,
     logout,
     updateUserDetails,
-    updatePassword,
-    updateProfilePicture,
-  }), [user, login, logout, updateUserDetails, updatePassword, updateProfilePicture]);
+    setLoading,
+    setError,
+  }), [user, isAuthenticated, loading, error, setUser, logout, updateUserDetails, setLoading, setError]);
 
   return (
     <AuthContext.Provider value={contextValue}>
