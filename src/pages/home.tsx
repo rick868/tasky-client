@@ -443,7 +443,7 @@ const Home = () => {
   };
 
   const drawerContent = (
-    <Box sx={{ overflow: 'auto', margin: '3rem' }}>
+    <Box sx={{ overflow: 'auto', marginTop: '2rem' }}>
       <List sx={{ pt: 1 }}>
         {sidebarItems.map((item) => (
           <ListItem key={item.key} disablePadding>
