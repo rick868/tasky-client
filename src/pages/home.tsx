@@ -64,7 +64,7 @@ const Home = () => {
     markComplete,
     markIncomplete,
     restoreTaskAsync,
-    deleteTaskAsync,
+    softDeleteTask,
   } = useTaskStore();
 
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -170,13 +170,14 @@ const Home = () => {
     if (!taskToDelete) return;
 
     try {
-      await deleteTaskAsync(taskToDelete.id);
-      showSnackbar('Task deleted successfully', 'success');
+      
+      await softDeleteTask(taskToDelete.id);
+      showSnackbar('Task moved to trash', 'success');
       setTaskToDelete(null);
       setConfirmDeleteOpen(false);
     } catch (error) {
-      console.error('Error deleting task:', error);
-      showSnackbar('Failed to delete task', 'error');
+      console.error('Error moving task to trash:', error);
+      showSnackbar('Failed to move task to trash', 'error');
     }
   };
 
@@ -324,7 +325,7 @@ const Home = () => {
             </Button>
           )}
           {selectedView === 'My Tasks' && (
-            <Button variant="text" sx={{ mt: 2 }} onClick={() => handleViewSelect('Completed')}>
+            <Button variant="text" sx={{ mt: 2 }} onClick={() => navigate('/completedTasks')}>
               Explore your completed tasks
             </Button>
           )}
@@ -426,11 +427,11 @@ const Home = () => {
                   ) : (
                     <Button
                       variant="outlined"
-                      color="error"
+                      color="warning"
                       size="small"
                       onClick={() => handleDeleteClick(task)}
                     >
-                      Delete
+                      Move to Trash
                     </Button>
                   )}
                 </Box>
@@ -609,6 +610,7 @@ const Home = () => {
           flexGrow: 1,
           p: 3,
           width: { sm: `calc(100% - ${drawerWidth}px)` },
+          marginLeft: { sm: `${drawerWidth}px` },
           mt: 8,
         }}
       >
@@ -729,18 +731,18 @@ const Home = () => {
               outline: 'none',
             }}
           >
-            <Typography variant="h5" component="h2" gutterBottom sx={{ mb: 2, color: theme.palette.error.main }}>
-              Confirm Delete
+            <Typography variant="h5" component="h2" gutterBottom sx={{ mb: 2, color: theme.palette.warning.main }}>
+            Trash
             </Typography>
             <Typography variant="body1" sx={{ mb: 3 }}>
-              Are you sure you want to delete "{taskToDelete?.title}"? This action cannot be undone.
+              Are you sure you want to move "{taskToDelete?.title}" to trash? 
             </Typography>
             <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 2 }}>
               <Button variant="outlined" onClick={handleCancelDelete}>
                 Cancel
               </Button>
-              <Button variant="contained" color="error" onClick={handleConfirmDelete}>
-                Delete
+              <Button variant="contained" color="warning" onClick={handleConfirmDelete}>
+                Trash
               </Button>
             </Box>
           </Paper>

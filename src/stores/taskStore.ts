@@ -23,6 +23,7 @@ interface TaskState {
   markComplete: (taskId: string) => Promise<void>;
   markIncomplete: (taskId: string) => Promise<void>;
   restoreTaskAsync: (taskId: string) => Promise<void>;
+  softDeleteTask: (taskId: string) => Promise<void>;
   deleteTaskAsync: (taskId: string) => Promise<void>;
 }
 
@@ -155,17 +156,38 @@ export const useTaskStore = create<TaskState>()(
         }
       },
 
+      softDeleteTask: async (taskId) => {
+        set({ loading: true, error: null });
+        try {
+          await taskApi.deleteTask(taskId);
+         
+          set((state) => ({
+            tasks: state.tasks.map(task => 
+              task.id === taskId ? { ...task, isDeleted: true } : task
+            ),
+            loading: false
+          }));
+        } catch (error) {
+          set({ 
+            error: error instanceof Error ? error.message : 'Failed to move task to trash', 
+            loading: false 
+          });
+          throw error;
+        }
+      },
+
       deleteTaskAsync: async (taskId) => {
         set({ loading: true, error: null });
         try {
           await taskApi.deleteTask(taskId);
+          
           set((state) => ({
             tasks: state.tasks.filter(task => task.id !== taskId),
             loading: false
           }));
         } catch (error) {
           set({ 
-            error: error instanceof Error ? error.message : 'Failed to delete task', 
+            error: error instanceof Error ? error.message : 'Failed to delete task permanently', 
             loading: false 
           });
           throw error;

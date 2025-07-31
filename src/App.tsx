@@ -9,6 +9,7 @@ import SignIn from './pages/signin';
 import SignUp from './pages/signup';
 import Tasks from './pages/tasks';
 import NewTask from './pages/newTask';
+import CompletedTasks from './pages/completedTask';
 import Trash from './pages/trash';
 import UpdateTask from './pages/updateTask';
 import { AuthContext } from './context/AuthContext';
@@ -26,7 +27,7 @@ const ProtectedRoute = ({ children }: { children: ReactNode }) => {
 const App = () => {
   const location = useLocation();
   
-  // Initialize app with Zustand stores
+  
   useAppInitialization();
 
   const showHeader = location.pathname !== '/home' && location.pathname !== '/tasks';
@@ -70,15 +71,15 @@ const App = () => {
               <NewTask />
             </ProtectedRoute>
           }
-        />
-        {/* <Route
-          path="/completedTasks"
-          element={
-            <ProtectedRoute>
-              <CompletedTasks />
-            </ProtectedRoute>
-          }
-        /> */}
+          />
+          <Route
+            path="/completedTasks"
+            element={
+              <ProtectedRoute>
+                <CompletedTasks />
+              </ProtectedRoute>
+            }
+          /> 
         <Route
           path="/trash"
           element={

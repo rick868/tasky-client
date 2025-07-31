@@ -15,9 +15,8 @@ const Tasks = () => {
   const [tasks, setTasks] = useState<Task[]>([]);
   const navigate = useNavigate();
 
-  // For demo, using local state. Replace with API call or context as needed.
   useEffect(() => {
-    // Load tasks from localStorage or initialize empty
+   
     const storedTasks = localStorage.getItem('tasks');
     if (storedTasks) {
       setTasks(JSON.parse(storedTasks));

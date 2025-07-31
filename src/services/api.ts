@@ -10,9 +10,17 @@ const api = axios.create({
 });
 
 api.interceptors.request.use((config) => {
-  const user = JSON.parse(localStorage.getItem('user') || 'null');
-  if (user?.token && config.headers) {
-    config.headers.Authorization = `Bearer ${user.token}`;
+  const userStorage = localStorage.getItem('user-storage');
+  if (userStorage) {
+    try {
+      const parsed = JSON.parse(userStorage);
+      const user = parsed.state?.user;
+      if (user?.token && config.headers) {
+        config.headers.Authorization = `Bearer ${user.token}`;
+      }
+    } catch (error) {
+      console.error('Error parsing user storage:', error);
+    }
   }
   return config;
 });
@@ -21,7 +29,7 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      localStorage.removeItem('user');
+      localStorage.removeItem('user-storage');
       window.location.href = '/signin';
     }
     const rejectionError = error instanceof Error ? error : new Error(error?.message || 'Unknown error');

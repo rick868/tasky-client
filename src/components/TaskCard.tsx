@@ -19,7 +19,7 @@ const TaskCard: React.FC<TaskCardProps> = ({
   showRestore = false,
 }) => {
   return (
-    <Card sx={{ minWidth: 275, marginBottom: 2 }}>
+    <Card sx={{ minWidth: 200, marginBottom: 2 }}>
       <CardContent>
         <Typography variant="h6" component="div" gutterBottom>
           {title}
