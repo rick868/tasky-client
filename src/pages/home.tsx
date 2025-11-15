@@ -295,38 +295,116 @@ const Home = () => {
     if (loading) {
       return (
         <Box sx={{ textAlign: 'center', mt: 8 }}>
-          <Typography variant="h6">Loading tasks...</Typography>
+          <Typography variant="h6" color="text.secondary">Loading tasks...</Typography>
         </Box>
       );
     }
 
     if (filteredTasks.length === 0) {
+      const emptyStateConfig = {
+        'My Tasks': {
+          title: "You're all caught up! 🎉",
+          subtitle: "No active tasks. Ready to add a new task, or take a well-deserved break?",
+          buttonText: "+ Add New Task",
+        },
+        'Completed': {
+          title: "No tasks completed yet",
+          subtitle: "Start completing tasks to see them here!",
+          buttonText: "+ Add Your First Task",
+        },
+        'Today': {
+          title: "Nothing due today. Enjoy the calm! ☀️",
+          subtitle: "Planning to add something for today?",
+          buttonText: "+ Add Task for Today",
+        },
+        'Upcoming': {
+          title: "No upcoming tasks for the next 7 days",
+          subtitle: "Add new tasks to see your future workload.",
+          buttonText: "+ Add Upcoming Task",
+        },
+        'Trash': {
+          title: "Your trash is empty",
+          subtitle: "Items in Trash are permanently deleted after 30 days.",
+          buttonText: null,
+        },
+        'Inbox': {
+          title: "Your inbox is clear! ✨",
+          subtitle: "Let's get productive! Click below to add your first task.",
+          buttonText: "+ Add Your First Task",
+        },
+      };
+
+      const config = emptyStateConfig[selectedView as keyof typeof emptyStateConfig] || emptyStateConfig['My Tasks'];
+
       return (
-        <Box sx={{ textAlign: 'center', mt: 8, color: theme.palette.text.secondary }}>
-          <Typography variant="h6" gutterBottom>
-            {selectedView === 'My Tasks' && "You're all caught up! No active tasks."}
-            {selectedView === 'Completed' && "No tasks completed yet."}
-            {selectedView === 'Today' && "Nothing due today. Enjoy the calm!"}
-            {selectedView === 'Upcoming' && "No upcoming tasks for the next 7 days."}
-            {selectedView === 'Trash' && "Your trash is empty."}
-            {selectedView === 'Inbox' && "Your inbox is clear. Time to add some tasks!"}
+        <Box sx={{ 
+          textAlign: 'center', 
+          mt: 8, 
+          mb: 4,
+          p: 4,
+          borderRadius: 3,
+          bgcolor: 'background.paper',
+          border: `2px dashed ${theme.palette.divider}`,
+        }}>
+          <Typography 
+            variant="h5" 
+            gutterBottom
+            sx={{ 
+              fontWeight: 600,
+              color: 'text.primary',
+              mb: 2,
+            }}
+          >
+            {config.title}
           </Typography>
-          <Typography variant="body1" gutterBottom sx={{ mb: 3 }}>
-            {selectedView === 'My Tasks' && "Ready to add a new task, or take a well-deserved break?"}
-            {selectedView === 'Completed' && "Start completing tasks to see them here!"}
-            {selectedView === 'Today' && "Planning to add something for today?"}
-            {selectedView === 'Upcoming' && "Add new tasks to see your future workload."}
-            {selectedView === 'Trash' && "Items in Trash are permanently deleted after 30 days."}
-            {selectedView === 'Inbox' && "Let's get productive! Click below to add your first task."}
+          <Typography 
+            variant="body1" 
+            gutterBottom 
+            sx={{ 
+              mb: 4, 
+              color: 'text.secondary',
+              maxWidth: 500,
+              mx: 'auto',
+            }}
+          >
+            {config.subtitle}
           </Typography>
-          {selectedView !== 'Trash' && (
-            <Button variant="contained" size="large" startIcon={<AddIcon />} onClick={handleQuickAddOpen}>
-              + Add {selectedView === 'Inbox' || selectedView === 'My Tasks' ? 'New' : 'Your First'} Task
+          {config.buttonText && (
+            <Button 
+              variant="contained" 
+              size="large" 
+              startIcon={<AddIcon />} 
+              onClick={handleQuickAddOpen}
+              sx={{
+                borderRadius: 3,
+                px: 4,
+                py: 1.5,
+                textTransform: 'none',
+                fontWeight: 600,
+                background: 'linear-gradient(45deg, #2196F3 30%, #21CBF3 90%)',
+                boxShadow: '0 4px 15px rgba(33, 150, 243, 0.4)',
+                '&:hover': {
+                  background: 'linear-gradient(45deg, #21CBF3 30%, #2196F3 90%)',
+                  boxShadow: '0 6px 20px rgba(33, 150, 243, 0.5)',
+                  transform: 'translateY(-2px)',
+                },
+                transition: 'all 0.3s ease',
+              }}
+            >
+              {config.buttonText}
             </Button>
           )}
           {selectedView === 'My Tasks' && (
-            <Button variant="text" sx={{ mt: 2 }} onClick={() => navigate('/completedTasks')}>
-              Explore your completed tasks
+            <Button 
+              variant="text" 
+              sx={{ 
+                mt: 2,
+                textTransform: 'none',
+                fontWeight: 500,
+              }} 
+              onClick={() => navigate('/completedTasks')}
+            >
+              Explore your completed tasks →
             </Button>
           )}
         </Box>
@@ -346,25 +424,59 @@ const Home = () => {
           }
 
           return (
-            <Paper key={task.id} elevation={2} sx={{ mb: 2, borderRadius: 2 }}>
+            <Paper 
+              key={task.id} 
+              elevation={task.isCompleted ? 1 : 3} 
+              sx={{ 
+                mb: 2, 
+                borderRadius: 3,
+                overflow: 'hidden',
+                transition: 'all 0.3s ease',
+                opacity: task.isCompleted ? 0.7 : 1,
+                '&:hover': {
+                  transform: 'translateY(-2px)',
+                  boxShadow: theme.shadows[6],
+                  opacity: 1,
+                },
+                border: task.isCompleted ? `1px solid ${theme.palette.divider}` : '1px solid transparent',
+              }}
+            >
               <ListItem sx={{
                 display: 'flex',
-                alignItems: 'center',
+                alignItems: 'flex-start',
                 justifyContent: 'space-between',
-                p: 2,
-                '&:hover': {
-                  backgroundColor: theme.palette.action.hover,
-                }
+                p: 2.5,
+                bgcolor: task.isCompleted ? 'rgba(0, 0, 0, 0.02)' : 'background.paper',
               }}>
-                <Box sx={{ display: 'flex', alignItems: 'center', flexGrow: 1, pr: 2 }}>
+                <Box sx={{ display: 'flex', alignItems: 'flex-start', flexGrow: 1, pr: 2, gap: 1.5 }}>
                   {selectedView !== 'Completed' && selectedView !== 'Trash' && (
                     <IconButton
                       edge="start"
                       color="primary"
                       onClick={() => handleToggleComplete(task.id)}
-                      sx={{ mr: 1, p: 0 }}
+                      sx={{ 
+                        mt: 0.5,
+                        p: 0.5,
+                        '&:hover': {
+                          backgroundColor: 'primary.light',
+                          transform: 'scale(1.1)',
+                        },
+                        transition: 'all 0.2s ease',
+                      }}
                     >
-                      {task.isCompleted ? <CheckCircleIcon color="success" /> : <div style={{ width: 24, height: 24, border: '1px solid gray', borderRadius: '50%' }}></div>}
+                      {task.isCompleted ? (
+                        <CheckCircleIcon color="success" sx={{ fontSize: 28 }} />
+                      ) : (
+                        <Box 
+                          sx={{ 
+                            width: 28, 
+                            height: 28, 
+                            border: `2px solid ${theme.palette.primary.main}`, 
+                            borderRadius: '50%',
+                            transition: 'all 0.2s ease',
+                          }}
+                        />
+                      )}
                     </IconButton>
                   )}
                   {selectedView === 'Completed' && (
@@ -372,67 +484,162 @@ const Home = () => {
                       edge="start"
                       color="success"
                       onClick={() => handleToggleComplete(task.id)}
-                      sx={{ mr: 1, p: 0 }}
+                      sx={{ 
+                        mt: 0.5,
+                        p: 0.5,
+                        '&:hover': {
+                          backgroundColor: 'success.light',
+                          transform: 'scale(1.1)',
+                        },
+                        transition: 'all 0.2s ease',
+                      }}
                     >
-                      <CheckCircleIcon />
+                      <CheckCircleIcon sx={{ fontSize: 28 }} />
                     </IconButton>
                   )}
 
-                  <ListItemText
-                    primary={
-                      <Box sx={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        flexWrap: 'wrap',
-                        gap: 1,
-                        textDecoration: task.isCompleted ? 'line-through' : 'none',
-                        color: task.isCompleted ? theme.palette.text.disabled : 'inherit',
-                      }}>
-                        <Typography variant="subtitle1" sx={{ fontWeight: 'bold' }}>
-                          {task.title}
-                        </Typography>
-                        {task.priority && (
-                          <Chip label={task.priority} color={priorityColor} size="small" />
-                        )}
-                        {task.dueDate && (
-                          <Chip
-                            label={`Due: ${new Date(task.dueDate).toLocaleDateString()}`}
-                            size="small"
-                            icon={<CalendarTodayIcon sx={{ fontSize: 16 }} />}
-                            color={new Date(task.dueDate) < new Date() && !task.isCompleted ? 'error' : 'default'}
+                  <Box sx={{ flexGrow: 1, minWidth: 0 }}>
+                    <Box sx={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      flexWrap: 'wrap',
+                      gap: 1,
+                      mb: 0.5,
+                    }}>
+                      <Typography 
+                        variant="subtitle1" 
+                        sx={{ 
+                          fontWeight: 600,
+                          fontSize: '1.1rem',
+                          textDecoration: task.isCompleted ? 'line-through' : 'none',
+                          color: task.isCompleted ? theme.palette.text.disabled : 'text.primary',
+                          wordBreak: 'break-word',
+                        }}
+                      >
+                        {task.title}
+                      </Typography>
+                      {task.priority && (
+                        <Chip 
+                          label={task.priority} 
+                          color={priorityColor} 
+                          size="small"
+                          sx={{
+                            fontWeight: 600,
+                            height: 24,
+                            '& .MuiChip-label': {
+                              px: 1.5,
+                            },
+                          }}
+                        />
+                      )}
+                      {task.dueDate && (
+                        <Chip
+                          label={new Date(task.dueDate).toLocaleDateString()}
+                          size="small"
+                          icon={<CalendarTodayIcon sx={{ fontSize: 14 }} />}
+                          color={new Date(task.dueDate) < new Date() && !task.isCompleted ? 'error' : 'default'}
+                          variant={new Date(task.dueDate) < new Date() && !task.isCompleted ? 'filled' : 'outlined'}
+                          sx={{
+                            height: 24,
+                            '& .MuiChip-label': {
+                              px: 1.5,
+                            },
+                          }}
+                        />
+                      )}
+                    </Box>
+                    {task.description && (
+                      <Typography 
+                        variant="body2" 
+                        color="text.secondary"
+                        sx={{
+                          mb: 1,
+                          textDecoration: task.isCompleted ? 'line-through' : 'none',
+                          wordBreak: 'break-word',
+                        }}
+                      >
+                        {task.description}
+                      </Typography>
+                    )}
+                    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.75, mt: 1 }}>
+                      {task.project && task.project.trim() && (
+                        <Chip 
+                          label={task.project} 
+                          size="small" 
+                          variant="outlined"
+                          sx={{
+                            height: 22,
+                            bgcolor: 'primary.light',
+                            borderColor: 'primary.main',
+                            color: 'primary.dark',
+                            fontWeight: 500,
+                          }}
+                        />
+                      )}
+                      {task.labels?.map(label => (
+                        label && (
+                          <Chip 
+                            key={label} 
+                            label={label} 
+                            size="small" 
+                            variant="outlined"
+                            sx={{
+                              height: 22,
+                              borderColor: 'secondary.main',
+                              color: 'secondary.dark',
+                              fontWeight: 500,
+                            }}
                           />
-                        )}
-                        {task.project && task.project.trim() && (
-                          <Chip label={`#${task.project}`} size="small" variant="outlined" />
-                        )}
-                        {task.labels?.map(label => (
-                          <Chip key={label} label={label ? `@${label}` : undefined} size="small" variant="outlined" />
-                        ))}
-                      </Box>
-                    }
-                    secondary={task.description}
-                    sx={{ ml: 1 }}
-                  />
+                        )
+                      ))}
+                    </Box>
+                  </Box>
                 </Box>
-                <Box>
+                <Box sx={{ display: 'flex', gap: 1, flexShrink: 0 }}>
                   {selectedView === 'Trash' ? (
                     <Button
-                      variant="outlined"
+                      variant="contained"
                       color="primary"
                       size="small"
                       onClick={() => handleRestoreTask(task.id)}
+                      sx={{
+                        textTransform: 'none',
+                        borderRadius: 2,
+                        px: 2,
+                        fontWeight: 600,
+                      }}
                     >
                       Restore
                     </Button>
                   ) : (
-                    <Button
-                      variant="outlined"
-                      color="warning"
-                      size="small"
-                      onClick={() => handleDeleteClick(task)}
-                    >
-                      Move to Trash
-                    </Button>
+                    <>
+                      <Button
+                        variant="outlined"
+                        size="small"
+                        onClick={() => navigate(`/updateTask/${task.id}`)}
+                        sx={{
+                          textTransform: 'none',
+                          borderRadius: 2,
+                          px: 2,
+                          display: { xs: 'none', sm: 'inline-flex' },
+                        }}
+                      >
+                        Edit
+                      </Button>
+                      <IconButton
+                        size="small"
+                        onClick={() => handleDeleteClick(task)}
+                        sx={{
+                          color: 'error.main',
+                          '&:hover': {
+                            backgroundColor: 'error.light',
+                            color: 'error.dark',
+                          },
+                        }}
+                      >
+                        <DeleteIcon />
+                      </IconButton>
+                    </>
                   )}
                 </Box>
               </ListItem>
@@ -452,25 +659,45 @@ const Home = () => {
               selected={selectedView === item.key}
               onClick={() => handleViewSelect(item.key)}
               sx={{
+                borderRadius: 2,
+                mx: 1,
+                mb: 0.5,
                 '&.Mui-selected': {
-                  backgroundColor: theme.palette.primary.light,
-                  color: theme.palette.primary.contrastText,
+                  background: 'linear-gradient(45deg, #2196F3 30%, #21CBF3 90%)',
+                  color: 'white',
                   '& .MuiListItemIcon-root': {
-                    color: theme.palette.primary.contrastText,
+                    color: 'white',
+                  },
+                  '& .MuiListItemText-secondary': {
+                    color: 'rgba(255, 255, 255, 0.8)',
                   },
                   '&:hover': {
-                    backgroundColor: theme.palette.primary.dark,
+                    background: 'linear-gradient(45deg, #21CBF3 30%, #2196F3 90%)',
                   }
                 },
                 '&:hover': {
                   backgroundColor: theme.palette.action.hover,
-                }
+                  borderRadius: 2,
+                },
+                transition: 'all 0.3s ease',
               }}
             >
-              <ListItemIcon sx={{ color: selectedView === item.key ? theme.palette.primary.contrastText : 'inherit' }}>
+              <ListItemIcon sx={{ 
+                color: selectedView === item.key ? 'white' : 'inherit',
+                minWidth: 40,
+              }}>
                 {item.icon}
               </ListItemIcon>
-              <ListItemText primary={item.label} secondary={item.description} />
+              <ListItemText 
+                primary={item.label} 
+                secondary={item.description}
+                primaryTypographyProps={{
+                  fontWeight: selectedView === item.key ? 600 : 500,
+                }}
+                secondaryTypographyProps={{
+                  variant: 'caption',
+                }}
+              />
             </ListItemButton>
           </ListItem>
         ))}
@@ -486,19 +713,26 @@ const Home = () => {
      
       <AppBar
         position="fixed"
+        elevation={0}
         sx={{
           zIndex: theme.zIndex.drawer + 1,
-          backgroundColor: theme.palette.primary.main,
-          color: theme.palette.primary.contrastText,
+          background: 'linear-gradient(45deg, #2196F3 30%, #21CBF3 90%)',
+          borderBottom: `1px solid ${theme.palette.divider}`,
         }}
       >
-        <Toolbar>
+        <Toolbar sx={{ py: 1 }}>
           <IconButton
             color="inherit"
             aria-label="open drawer"
             edge="start"
             onClick={handleDrawerToggle}
-            sx={{ mr: 2, display: { sm: 'none' } }}
+            sx={{ 
+              mr: 2, 
+              display: { sm: 'none' },
+              '&:hover': {
+                backgroundColor: 'rgba(255, 255, 255, 0.1)',
+              },
+            }}
           >
             <MenuIcon />
           </IconButton>
@@ -506,8 +740,16 @@ const Home = () => {
             variant="h6"
             noWrap
             component="div"
-            sx={{ flexGrow: 1, cursor: 'pointer' }}
-            onClick={() => navigate('/')}
+            sx={{ 
+              flexGrow: 1, 
+              cursor: 'pointer',
+              fontWeight: 700,
+              fontSize: '1.5rem',
+              '&:hover': {
+                opacity: 0.9,
+              },
+            }}
+            onClick={() => navigate('/home')}
           >
             Tasky
           </Typography>
@@ -515,13 +757,23 @@ const Home = () => {
           
           <Button
             variant="contained"
-            color="secondary"
             startIcon={<AddIcon />}
             onClick={handleQuickAddOpen}
             sx={{
               ml: 2,
               display: { xs: 'none', sm: 'flex' },
-              borderRadius: theme.shape.borderRadius,
+              borderRadius: 2,
+              textTransform: 'none',
+              fontWeight: 600,
+              backgroundColor: 'rgba(255, 255, 255, 0.2)',
+              color: 'white',
+              backdropFilter: 'blur(10px)',
+              '&:hover': {
+                backgroundColor: 'rgba(255, 255, 255, 0.3)',
+                transform: 'translateY(-2px)',
+                boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+              },
+              transition: 'all 0.3s ease',
             }}
           >
             Add Task
@@ -532,12 +784,25 @@ const Home = () => {
             color="inherit"
             aria-label="add task"
             onClick={handleQuickAddOpen}
-            sx={{ display: { xs: 'block', sm: 'none' } }}
+            sx={{ 
+              display: { xs: 'block', sm: 'none' },
+              '&:hover': {
+                backgroundColor: 'rgba(255, 255, 255, 0.1)',
+              },
+            }}
           >
             <AddIcon />
           </IconButton>
 
-          <IconButton color="inherit" sx={{ ml: 1 }}>
+          <IconButton 
+            color="inherit" 
+            sx={{ 
+              ml: 1,
+              '&:hover': {
+                backgroundColor: 'rgba(255, 255, 255, 0.1)',
+              },
+            }}
+          >
             <Badge badgeContent={4} color="error">
               <NotificationsIcon />
             </Badge>
@@ -550,10 +815,22 @@ const Home = () => {
             aria-haspopup="true"
             onClick={handleProfileMenuOpen}
             color="inherit"
-            sx={{ ml: 1 }}
+            sx={{ 
+              ml: 1,
+              '&:hover': {
+                backgroundColor: 'rgba(255, 255, 255, 0.1)',
+              },
+            }}
           >
-            <Avatar sx={{ width: 32, height: 32, bgcolor: theme.palette.secondary.light }}>
-              {user?.userName?.charAt(0) || 'U'}
+            <Avatar sx={{ 
+              width: 36, 
+              height: 36, 
+              bgcolor: 'rgba(255, 255, 255, 0.3)',
+              color: 'white',
+              fontWeight: 600,
+              border: '2px solid rgba(255, 255, 255, 0.5)',
+            }}>
+              {user?.userName?.charAt(0).toUpperCase() || 'U'}
             </Avatar>
           </IconButton>
           <Menu
@@ -598,7 +875,12 @@ const Home = () => {
         variant="permanent"
         sx={{
           display: { xs: 'none', sm: 'block' },
-          '& .MuiDrawer-paper': { boxSizing: 'border-box', width: drawerWidth },
+          '& .MuiDrawer-paper': { 
+            boxSizing: 'border-box', 
+            width: drawerWidth,
+            borderRight: `1px solid ${theme.palette.divider}`,
+            backgroundColor: theme.palette.background.paper,
+          },
         }}
         open
       >
@@ -614,14 +896,37 @@ const Home = () => {
           mt: 8,
         }}
       >
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-          <Typography variant="h4" component="h1" gutterBottom>
+        <Box sx={{ 
+          display: 'flex', 
+          justifyContent: 'space-between', 
+          alignItems: 'center', 
+          mb: 4,
+          pb: 2,
+          borderBottom: `2px solid ${theme.palette.divider}`,
+        }}>
+          <Typography 
+            variant="h4" 
+            component="h1"
+            sx={{
+              fontWeight: 700,
+              background: 'linear-gradient(45deg, #2196F3 30%, #21CBF3 90%)',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+              backgroundClip: 'text',
+            }}
+          >
             {selectedView}
           </Typography>
           <Button
             variant="outlined"
             onClick={() => setFilterOpen(true)}
-            sx={{ display: { xs: 'none', sm: 'block' } }}
+            sx={{ 
+              display: { xs: 'none', sm: 'block' },
+              borderRadius: 2,
+              textTransform: 'none',
+              fontWeight: 600,
+              px: 3,
+            }}
           >
             Filter
           </Button>
@@ -641,16 +946,28 @@ const Home = () => {
               top: '50%',
               left: '50%',
               transform: 'translate(-50%, -50%)',
-              width: { xs: '90%', sm: 450 },
+              width: { xs: '90%', sm: 500 },
               p: 4,
-              borderRadius: typeof theme.shape.borderRadius === 'number'
-                ? theme.shape.borderRadius * 2
-                : `calc(${theme.shape.borderRadius} * 2)`,
-              boxShadow: theme.shadows[8],
+              borderRadius: 3,
+              boxShadow: theme.shadows[12],
               outline: 'none',
+              maxHeight: '90vh',
+              overflow: 'auto',
             }}
           >
-            <Typography variant="h5" component="h2" gutterBottom sx={{ mb: 3, color: theme.palette.primary.main }}>
+            <Typography 
+              variant="h5" 
+              component="h2" 
+              gutterBottom 
+              sx={{ 
+                mb: 3,
+                fontWeight: 700,
+                background: 'linear-gradient(45deg, #2196F3 30%, #21CBF3 90%)',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+                backgroundClip: 'text',
+              }}
+            >
               Quick Add Task
             </Typography>
             <TextField
@@ -661,6 +978,11 @@ const Home = () => {
               margin="normal"
               variant="outlined"
               autoFocus
+              sx={{
+                '& .MuiOutlinedInput-root': {
+                  borderRadius: 2,
+                },
+              }}
             />
             <TextField
               label="Description (optional)"
@@ -670,7 +992,12 @@ const Home = () => {
               margin="normal"
               variant="outlined"
               multiline
-              rows={2}
+              rows={3}
+              sx={{
+                '& .MuiOutlinedInput-root': {
+                  borderRadius: 2,
+                },
+              }}
             />
             <TextField
               label="Due Date (optional)"
@@ -681,6 +1008,11 @@ const Home = () => {
               margin="normal"
               variant="outlined"
               InputLabelProps={{ shrink: true }}
+              sx={{
+                '& .MuiOutlinedInput-root': {
+                  borderRadius: 2,
+                },
+              }}
             />
             <TextField
               label="Project (optional)"
@@ -689,6 +1021,11 @@ const Home = () => {
               fullWidth
               margin="normal"
               variant="outlined"
+              sx={{
+                '& .MuiOutlinedInput-root': {
+                  borderRadius: 2,
+                },
+              }}
             />
             <TextField
               label="Tags (comma-separated, optional)"
@@ -698,12 +1035,41 @@ const Home = () => {
               margin="normal"
               variant="outlined"
               placeholder="work, urgent, personal"
+              sx={{
+                '& .MuiOutlinedInput-root': {
+                  borderRadius: 2,
+                },
+              }}
             />
-            <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 3, gap: 2 }}>
-              <Button variant="outlined" onClick={handleQuickAddClose}>
+            <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 4, gap: 2 }}>
+              <Button 
+                variant="outlined" 
+                onClick={handleQuickAddClose}
+                sx={{
+                  borderRadius: 2,
+                  textTransform: 'none',
+                  fontWeight: 600,
+                  px: 3,
+                }}
+              >
                 Cancel
               </Button>
-              <Button variant="contained" onClick={handleAddTask}>
+              <Button 
+                variant="contained" 
+                onClick={handleAddTask}
+                sx={{
+                  borderRadius: 2,
+                  textTransform: 'none',
+                  fontWeight: 600,
+                  px: 3,
+                  background: 'linear-gradient(45deg, #2196F3 30%, #21CBF3 90%)',
+                  boxShadow: '0 4px 15px rgba(33, 150, 243, 0.4)',
+                  '&:hover': {
+                    background: 'linear-gradient(45deg, #21CBF3 30%, #2196F3 90%)',
+                    boxShadow: '0 6px 20px rgba(33, 150, 243, 0.5)',
+                  },
+                }}
+              >
                 Add Task
               </Button>
             </Box>
@@ -722,27 +1088,53 @@ const Home = () => {
               top: '50%',
               left: '50%',
               transform: 'translate(-50%, -50%)',
-              width: { xs: '90%', sm: 400 },
+              width: { xs: '90%', sm: 450 },
               p: 4,
-              borderRadius: typeof theme.shape.borderRadius === 'number'
-                ? theme.shape.borderRadius * 2
-                : `calc(${theme.shape.borderRadius} * 2)`,
-              boxShadow: theme.shadows[8],
+              borderRadius: 3,
+              boxShadow: theme.shadows[12],
               outline: 'none',
             }}
           >
-            <Typography variant="h5" component="h2" gutterBottom sx={{ mb: 2, color: theme.palette.warning.main }}>
-            Trash
+            <Typography 
+              variant="h5" 
+              component="h2" 
+              gutterBottom 
+              sx={{ 
+                mb: 2, 
+                fontWeight: 700,
+                color: 'warning.main',
+              }}
+            >
+              Move to Trash
             </Typography>
-            <Typography variant="body1" sx={{ mb: 3 }}>
-              Are you sure you want to move "{taskToDelete?.title}" to trash? 
+            <Typography variant="body1" sx={{ mb: 4, color: 'text.secondary' }}>
+              Are you sure you want to move <strong>"{taskToDelete?.title}"</strong> to trash? This action can be undone from the Trash view.
             </Typography>
             <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 2 }}>
-              <Button variant="outlined" onClick={handleCancelDelete}>
+              <Button 
+                variant="outlined" 
+                onClick={handleCancelDelete}
+                sx={{
+                  borderRadius: 2,
+                  textTransform: 'none',
+                  fontWeight: 600,
+                  px: 3,
+                }}
+              >
                 Cancel
               </Button>
-              <Button variant="contained" color="warning" onClick={handleConfirmDelete}>
-                Trash
+              <Button 
+                variant="contained" 
+                color="warning" 
+                onClick={handleConfirmDelete}
+                sx={{
+                  borderRadius: 2,
+                  textTransform: 'none',
+                  fontWeight: 600,
+                  px: 3,
+                }}
+              >
+                Move to Trash
               </Button>
             </Box>
           </Paper>
@@ -760,16 +1152,28 @@ const Home = () => {
               top: '50%',
               left: '50%',
               transform: 'translate(-50%, -50%)',
-              width: { xs: '90%', sm: 450 },
+              width: { xs: '90%', sm: 500 },
               p: 4,
-              borderRadius: typeof theme.shape.borderRadius === 'number'
-                ? theme.shape.borderRadius * 2
-                : `calc(${theme.shape.borderRadius} * 2)`,
-              boxShadow: theme.shadows[8],
+              borderRadius: 3,
+              boxShadow: theme.shadows[12],
               outline: 'none',
+              maxHeight: '90vh',
+              overflow: 'auto',
             }}
           >
-            <Typography variant="h5" component="h2" gutterBottom sx={{ mb: 3, color: theme.palette.primary.main }}>
+            <Typography 
+              variant="h5" 
+              component="h2" 
+              gutterBottom 
+              sx={{ 
+                mb: 3,
+                fontWeight: 700,
+                background: 'linear-gradient(45deg, #2196F3 30%, #21CBF3 90%)',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+                backgroundClip: 'text',
+              }}
+            >
               Filter Tasks
             </Typography>
             <TextField
@@ -779,6 +1183,11 @@ const Home = () => {
               fullWidth
               margin="normal"
               variant="outlined"
+              sx={{
+                '& .MuiOutlinedInput-root': {
+                  borderRadius: 2,
+                },
+              }}
             />
             <TextField
               label="Filter by Due Date"
@@ -789,6 +1198,11 @@ const Home = () => {
               margin="normal"
               variant="outlined"
               InputLabelProps={{ shrink: true }}
+              sx={{
+                '& .MuiOutlinedInput-root': {
+                  borderRadius: 2,
+                },
+              }}
             />
             <FormControl fullWidth margin="normal" variant="outlined">
               <InputLabel>Filter by Priority</InputLabel>
@@ -829,11 +1243,35 @@ const Home = () => {
                 ))}
               </Select>
             </FormControl>
-            <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 3, gap: 2 }}>
-              <Button variant="outlined" onClick={handleClearFilters}>
+            <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 4, gap: 2 }}>
+              <Button 
+                variant="outlined" 
+                onClick={handleClearFilters}
+                sx={{
+                  borderRadius: 2,
+                  textTransform: 'none',
+                  fontWeight: 600,
+                  px: 3,
+                }}
+              >
                 Clear Filters
               </Button>
-              <Button variant="contained" onClick={handleApplyFilters}>
+              <Button 
+                variant="contained" 
+                onClick={handleApplyFilters}
+                sx={{
+                  borderRadius: 2,
+                  textTransform: 'none',
+                  fontWeight: 600,
+                  px: 3,
+                  background: 'linear-gradient(45deg, #2196F3 30%, #21CBF3 90%)',
+                  boxShadow: '0 4px 15px rgba(33, 150, 243, 0.4)',
+                  '&:hover': {
+                    background: 'linear-gradient(45deg, #21CBF3 30%, #2196F3 90%)',
+                    boxShadow: '0 6px 20px rgba(33, 150, 243, 0.5)',
+                  },
+                }}
+              >
                 Apply Filters
               </Button>
             </Box>

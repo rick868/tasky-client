@@ -6,9 +6,10 @@ import {
   TextField,
   Button,
   Paper,
-  Container,
   Link,
   Alert,
+  Fade,
+  Divider,
 } from '@mui/material';
 import { authApi } from '../services/api';
 
@@ -72,59 +73,96 @@ const SignUp = () => {
   };
 
   return (
-    <Container component="main" maxWidth="xs">
-      <Box
-        sx={{
-          marginTop: 8,
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-        }}
-      >
+    <Box
+      sx={{
+        minHeight: '100vh',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        background: 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)',
+        py: 4,
+        px: 2,
+      }}
+    >
+      <Fade in timeout={600}>
         <Paper
-          elevation={3}
+          elevation={8}
           sx={{
-            padding: 4,
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
+            maxWidth: 500,
             width: '100%',
+            p: 4,
+            borderRadius: 3,
+            background: 'rgba(255, 255, 255, 0.95)',
+            backdropFilter: 'blur(10px)',
           }}
         >
-          <Typography component="h1" variant="h5" gutterBottom>
-            Create Account
-          </Typography>
+          <Box sx={{ textAlign: 'center', mb: 3 }}>
+            <img 
+              src="Tasky.png" 
+              alt="Tasky Logo" 
+              style={{ maxWidth: '120px', marginBottom: 16 }}
+            />
+            <Typography 
+              component="h1" 
+              variant="h4"
+              sx={{ 
+                fontWeight: 700,
+                background: 'linear-gradient(45deg, #2196F3 30%, #21CBF3 90%)',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+                backgroundClip: 'text',
+                mb: 0.5,
+              }}
+            >
+              Create Account
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              Join Tasky and start organizing your tasks
+            </Typography>
+          </Box>
           
           {error && (
-            <Alert severity="error" sx={{ width: '100%', mb: 2 }}>
+            <Alert severity="error" sx={{ mb: 2, borderRadius: 2 }}>
               {error}
             </Alert>
           )}
 
-          <Box component="form" onSubmit={handleSubmit} sx={{ mt: 1, width: '100%' }}>
-            <TextField
-              margin="normal"
-              required
-              fullWidth
-              id="firstName"
-              label="First Name"
-              name="firstName"
-              autoComplete="given-name"
-              value={formData.firstName}
-              onChange={handleInputChange}
-              autoFocus
-            />
-            <TextField
-              margin="normal"
-              required
-              fullWidth
-              id="lastName"
-              label="Last Name"
-              name="lastName"
-              autoComplete="family-name"
-              value={formData.lastName}
-              onChange={handleInputChange}
-            />
+          <Box component="form" onSubmit={handleSubmit} sx={{ width: '100%' }}>
+            <Box sx={{ display: 'flex', gap: 2 }}>
+              <TextField
+                margin="normal"
+                required
+                fullWidth
+                id="firstName"
+                label="First Name"
+                name="firstName"
+                autoComplete="given-name"
+                value={formData.firstName}
+                onChange={handleInputChange}
+                autoFocus
+                sx={{
+                  '& .MuiOutlinedInput-root': {
+                    borderRadius: 2,
+                  },
+                }}
+              />
+              <TextField
+                margin="normal"
+                required
+                fullWidth
+                id="lastName"
+                label="Last Name"
+                name="lastName"
+                autoComplete="family-name"
+                value={formData.lastName}
+                onChange={handleInputChange}
+                sx={{
+                  '& .MuiOutlinedInput-root': {
+                    borderRadius: 2,
+                  },
+                }}
+              />
+            </Box>
             <TextField
               margin="normal"
               required
@@ -135,6 +173,11 @@ const SignUp = () => {
               autoComplete="username"
               value={formData.username}
               onChange={handleInputChange}
+              sx={{
+                '& .MuiOutlinedInput-root': {
+                  borderRadius: 2,
+                },
+              }}
             />
             <TextField
               margin="normal"
@@ -147,6 +190,11 @@ const SignUp = () => {
               type="email"
               value={formData.email}
               onChange={handleInputChange}
+              sx={{
+                '& .MuiOutlinedInput-root': {
+                  borderRadius: 2,
+                },
+              }}
             />
             <TextField
               margin="normal"
@@ -159,6 +207,12 @@ const SignUp = () => {
               autoComplete="new-password"
               value={formData.password}
               onChange={handleInputChange}
+              helperText="Must be at least 6 characters"
+              sx={{
+                '& .MuiOutlinedInput-root': {
+                  borderRadius: 2,
+                },
+              }}
             />
             <TextField
               margin="normal"
@@ -171,25 +225,71 @@ const SignUp = () => {
               autoComplete="new-password"
               value={formData.confirmPassword}
               onChange={handleInputChange}
+              sx={{
+                '& .MuiOutlinedInput-root': {
+                  borderRadius: 2,
+                },
+              }}
             />
             <Button
               type="submit"
               fullWidth
               variant="contained"
-              sx={{ mt: 3, mb: 2 }}
+              size="large"
+              sx={{
+                mt: 3,
+                mb: 2,
+                py: 1.5,
+                background: 'linear-gradient(45deg, #2196F3 30%, #21CBF3 90%)',
+                color: 'white',
+                fontWeight: 600,
+                borderRadius: 2,
+                textTransform: 'none',
+                fontSize: '1rem',
+                boxShadow: '0 4px 15px rgba(33, 150, 243, 0.4)',
+                '&:hover': {
+                  background: 'linear-gradient(45deg, #21CBF3 30%, #2196F3 90%)',
+                  boxShadow: '0 6px 20px rgba(33, 150, 243, 0.5)',
+                  transform: 'translateY(-2px)',
+                },
+                '&:disabled': {
+                  background: 'linear-gradient(45deg, #2196F3 30%, #21CBF3 90%)',
+                },
+                transition: 'all 0.3s ease',
+              }}
               disabled={loading}
             >
               {loading ? 'Creating Account...' : 'Sign Up'}
             </Button>
-            <Box sx={{ textAlign: 'center' }}>
-              <Link href="/signin" variant="body2">
-                Already have an account? Sign in
+          </Box>
+
+          <Divider sx={{ my: 3 }}>
+            <Typography variant="body2" color="text.secondary">
+              OR
+            </Typography>
+          </Divider>
+
+          <Box sx={{ textAlign: 'center' }}>
+            <Typography variant="body2" color="text.secondary">
+              Already have an account?{' '}
+              <Link 
+                href="/signin" 
+                underline="hover"
+                sx={{ 
+                  fontWeight: 600,
+                  color: 'primary.main',
+                  '&:hover': {
+                    color: 'primary.dark',
+                  },
+                }}
+              >
+                Sign in
               </Link>
-            </Box>
+            </Typography>
           </Box>
         </Paper>
-      </Box>
-    </Container>
+      </Fade>
+    </Box>
   );
 };
 

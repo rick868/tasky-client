@@ -115,28 +115,45 @@ const Profile = () => {
         }}
       >
         <Paper
-          elevation={3}
+          elevation={6}
           sx={{
             padding: 4,
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center',
             width: '100%',
+            borderRadius: 3,
+            background: 'rgba(255, 255, 255, 0.95)',
           }}
         >
           <Avatar
             sx={{
-              width: 80,
-              height: 80,
+              width: 100,
+              height: 100,
               mb: 2,
               bgcolor: 'primary.main',
-              fontSize: '2rem',
+              fontSize: '2.5rem',
+              fontWeight: 700,
+              border: '4px solid',
+              borderColor: 'primary.light',
+              boxShadow: '0 4px 15px rgba(33, 150, 243, 0.3)',
             }}
           >
-            {user?.userName?.charAt(0) || 'U'}
+            {user?.userName?.charAt(0).toUpperCase() || 'U'}
           </Avatar>
           
-          <Typography component="h1" variant="h4" gutterBottom>
+          <Typography 
+            component="h1" 
+            variant="h4" 
+            gutterBottom
+            sx={{
+              fontWeight: 700,
+              background: 'linear-gradient(45deg, #2196F3 30%, #21CBF3 90%)',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+              backgroundClip: 'text',
+            }}
+          >
             Profile Settings
           </Typography>
 
@@ -155,7 +172,15 @@ const Profile = () => {
           <Box sx={{ display: 'flex', gap: 3, flexWrap: 'wrap' }}>
             {/* Profile Information */}
             <Box sx={{ flex: '1 1 300px' }}>
-              <Typography variant="h6" gutterBottom>
+              <Typography 
+                variant="h6" 
+                gutterBottom
+                sx={{
+                  fontWeight: 600,
+                  mb: 3,
+                  color: 'primary.main',
+                }}
+              >
                 Profile Information
               </Typography>
               <Box component="form" onSubmit={handleProfileUpdate}>
@@ -167,6 +192,11 @@ const Profile = () => {
                   name="firstName"
                   value={profileData.firstName}
                   onChange={handleProfileChange}
+                  sx={{
+                    '& .MuiOutlinedInput-root': {
+                      borderRadius: 2,
+                    },
+                  }}
                 />
                 <TextField
                   margin="normal"
@@ -176,6 +206,11 @@ const Profile = () => {
                   name="lastName"
                   value={profileData.lastName}
                   onChange={handleProfileChange}
+                  sx={{
+                    '& .MuiOutlinedInput-root': {
+                      borderRadius: 2,
+                    },
+                  }}
                 />
                 <TextField
                   margin="normal"
@@ -185,6 +220,11 @@ const Profile = () => {
                   name="username"
                   value={profileData.username}
                   onChange={handleProfileChange}
+                  sx={{
+                    '& .MuiOutlinedInput-root': {
+                      borderRadius: 2,
+                    },
+                  }}
                 />
                 <TextField
                   margin="normal"
@@ -195,12 +235,32 @@ const Profile = () => {
                   type="email"
                   value={profileData.email}
                   onChange={handleProfileChange}
+                  sx={{
+                    '& .MuiOutlinedInput-root': {
+                      borderRadius: 2,
+                    },
+                  }}
                 />
                 <Button
                   type="submit"
                   fullWidth
                   variant="contained"
-                  sx={{ mt: 2 }}
+                  size="large"
+                  sx={{ 
+                    mt: 3,
+                    borderRadius: 2,
+                    textTransform: 'none',
+                    fontWeight: 600,
+                    py: 1.5,
+                    background: 'linear-gradient(45deg, #2196F3 30%, #21CBF3 90%)',
+                    boxShadow: '0 4px 15px rgba(33, 150, 243, 0.4)',
+                    '&:hover': {
+                      background: 'linear-gradient(45deg, #21CBF3 30%, #2196F3 90%)',
+                      boxShadow: '0 6px 20px rgba(33, 150, 243, 0.5)',
+                      transform: 'translateY(-2px)',
+                    },
+                    transition: 'all 0.3s ease',
+                  }}
                   disabled={loading}
                 >
                   {loading ? 'Updating...' : 'Update Profile'}
@@ -210,7 +270,15 @@ const Profile = () => {
 
             {/* Password Change */}
             <Box sx={{ flex: '1 1 300px' }}>
-              <Typography variant="h6" gutterBottom>
+              <Typography 
+                variant="h6" 
+                gutterBottom
+                sx={{
+                  fontWeight: 600,
+                  mb: 3,
+                  color: 'primary.main',
+                }}
+              >
                 Change Password
               </Typography>
               <Box component="form" onSubmit={handlePasswordUpdate}>
@@ -222,6 +290,11 @@ const Profile = () => {
                   type="password"
                   value={passwordData.currentPassword}
                   onChange={handlePasswordChange}
+                  sx={{
+                    '& .MuiOutlinedInput-root': {
+                      borderRadius: 2,
+                    },
+                  }}
                 />
                 <TextField
                   margin="normal"
@@ -231,6 +304,11 @@ const Profile = () => {
                   type="password"
                   value={passwordData.newPassword}
                   onChange={handlePasswordChange}
+                  sx={{
+                    '& .MuiOutlinedInput-root': {
+                      borderRadius: 2,
+                    },
+                  }}
                 />
                 <TextField
                   margin="normal"
@@ -240,12 +318,32 @@ const Profile = () => {
                   type="password"
                   value={passwordData.confirmPassword}
                   onChange={handlePasswordChange}
+                  sx={{
+                    '& .MuiOutlinedInput-root': {
+                      borderRadius: 2,
+                    },
+                  }}
                 />
                 <Button
                   type="submit"
                   fullWidth
                   variant="contained"
-                  sx={{ mt: 2 }}
+                  size="large"
+                  sx={{ 
+                    mt: 3,
+                    borderRadius: 2,
+                    textTransform: 'none',
+                    fontWeight: 600,
+                    py: 1.5,
+                    background: 'linear-gradient(45deg, #2196F3 30%, #21CBF3 90%)',
+                    boxShadow: '0 4px 15px rgba(33, 150, 243, 0.4)',
+                    '&:hover': {
+                      background: 'linear-gradient(45deg, #21CBF3 30%, #2196F3 90%)',
+                      boxShadow: '0 6px 20px rgba(33, 150, 243, 0.5)',
+                      transform: 'translateY(-2px)',
+                    },
+                    transition: 'all 0.3s ease',
+                  }}
                   disabled={loading}
                 >
                   {loading ? 'Updating...' : 'Change Password'}
